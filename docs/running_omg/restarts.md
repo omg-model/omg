@@ -16,11 +16,13 @@ nav_order: 4
 
 ---
 
-The default option in OMG is to initialise with uniform tracer distributions defined iby global mean concentrations set in `OMG/code/biogeochemistry/initialise_bgc.m`. 
+### Initial conditions
+
+The default option in OMG is to initialise tracers with uniform distributions defined by global mean concentrations set in `OMG/code/biogeochemistry/initialise_bgc.m`. 
 
 ## Initialising OMG from a previous run
 
-To select a previous OMG run to initialise from, set `gen_pars.OMG_restart_file` to the name of the relevant output directory:
+To alternatively initialise tracers from a previous OMG run, set `gen_pars.OMG_restart_file` to the name of the relevant output directory:
 
 ```matlab
 [output]=OMG(3000...
