@@ -4,3 +4,5 @@ output
 *.mp4
 *.m~
 *.DS_Store
+experiments/*
+!example_experiments.m
