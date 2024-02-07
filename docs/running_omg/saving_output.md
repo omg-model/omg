@@ -69,6 +69,9 @@ OMG(3000...
 
 ## Saving output directly to the MATLAB workspace
 
+{: .note }
+This feature is still being developed!
+
 Lastly, output can be loaded directly into the MATLAB workspace like a normal function. This will create a structure array in your workspace. This option allows the collation of specific ouputs within an ensemble 
 
 ```matlab
