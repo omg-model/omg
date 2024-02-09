@@ -30,7 +30,20 @@ bgc_pars.PIC_POC_omega_mod      = 0.8053406;                               % exp
 
 bgc_pars.CaCO3_frac2            = 0.4325;                                  % initial fraction of "refractory" CaCO3 
 bgc_pars.CaCO3_eL1              = 1083.486;                                % e-folding depth of CaCO3
-bgc_pars.CaCO3_eL2              = 1000000.0; 
+bgc_pars.CaCO3_eL2              = 1000000.0;   
+
+bgc_pars.det_Fe_sol             = 0.002014275;                             % aeolian Fe solubility
+bgc_pars.det_Fe_sol_exp         = 0.500;                                   % aeolian Fe solubility exponent (use 1.0 for uniform solubility)
+bgc_pars.scav_Fe_sf_POC         = 0.344104;                                % modifier of scavenging rate of dissolved Fe
+bgc_pars.scav_Fe_sf_CaCO3       = 0.0;                                     % modifier of scavenging rate of dissolved Fe
+bgc_pars.scav_fremin            = 0.0;                                     % scavenged regeneration
+bgc_K_FeL_pP                    = 11.0;                                    % adjust pK' (FeL)
+bgc_pars.POFe_POC               = 250000.0;                                % max C/Fe organic matter ratio
+bgc_pars.FetoC_pP               = -0.4225;                                 % [FeT] dependent Fe:C ratio [Ridgwell, 2001] -- power
+bgc_pars.FetoC_K                = 103684.0;                                % [FeT] dependent Fe:C ratio [Ridgwell, 2001] -- scaling
+bgc_pars.FetoC_C                = 0.0;                                     % [FeT] dependent Fe:C ratio [Ridgwell, 2001] -- constant
+bgc_pars.no_fsedFe              = false;                                   % return POFe?
+bgc_pars.fixed_FetoC            = false;                                   % Variable Fe:C?
 
 bgc_pars.C_to_P                 = 106.0;                                   % Stoichiometric ratio of C:P 
 bgc_pars.N_to_P                 = 16.0;                                    % Stoichiometric ratio of N:P 
