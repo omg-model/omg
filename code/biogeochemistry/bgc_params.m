@@ -14,6 +14,7 @@ bgc_pars.PO4_restore_data_file  = '../experiments/PO4_OBS.mat';            % loc
 
 bgc_pars.CARBCHEM_select        = false;                                   % flag to calculate carbonate chemistry and DIC/ALK tracers
 bgc_pars.O2_select              = false;                                   % flag to calculate O2
+bgc_pars.Fe_cycle               = false;                                   % flag to include Iron cycle
 
 bgc_pars.parfrac                = 0.43;                                    % PAR fraction
 

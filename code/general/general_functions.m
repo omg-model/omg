@@ -1413,6 +1413,14 @@ end
 %%
 function [ gen_pars , eco_pars , I ] = setup_array_indices ( gen_pars , bgc_pars , eco_pars )
 
+% Adding tracers:
+%   - add a new if bloack containing
+%   gen_pars.n_tracers=gen_pars.n_tracers+1;
+%   I.NAME=gen_pars.n_tracers;
+%   OCN_names{gen_pars.n_tracers}='NAME';
+%   OCN_long_names{gen_pars.n_tracers}='LONG NAME';
+%   OCN_units{gen_pars.n_tracers}='mol kg-1';
+
 % Setup Ocean Indices
 
     gen_pars.n_tracers=2;   % will always have PO4 and DOP
@@ -1443,6 +1451,21 @@ function [ gen_pars , eco_pars , I ] = setup_array_indices ( gen_pars , bgc_pars
         OCN_names{gen_pars.n_tracers}='ALK';
         OCN_long_names{gen_pars.n_tracers}='Alkalinity';
         OCN_units{gen_pars.n_tracers}='mol kg-1';
+    end
+
+    if(bgc_pars.Fe_cycle)
+        gen_pars.n_tracers=gen_pars.n_tracers+1;        % Total Fe
+        I.TFe=gen_pars.n_tracers;
+        OCN_names{gen_pars.n_tracers}='TFe';
+        OCN_long_names{gen_pars.n_tracers}='Total Iron';
+        OCN_units{gen_pars.n_tracers}='mol kg-1';
+
+        gen_pars.n_tracers=gen_pars.n_tracers+1;        % Total Ligands
+        I.TL=gen_pars.n_tracers;
+        OCN_names{gen_pars.n_tracers}='TL';
+        OCN_long_names{gen_pars.n_tracers}='Total Ligands';
+        OCN_units{gen_pars.n_tracers}='mol kg-1';
+
     end
     
     % record number of biogeochemical tracers
