@@ -7,8 +7,12 @@ bgc_pars.uptake_scheme          = 'MM';                                   % Biol
 bgc_pars.remin_scheme           = 'matrix';                                % POM remineralisation scheme
 bgc_pars.remin_function         = 'exponential';                           % remineralisation function
 
-bgc_pars.u0PO4                  = 1.9582242E-06;                           % Michaelis-Menton maximum PO4 uptake (mol kg-1 yr-1)
-bgc_pars.KPO4                   = 2.1989611E-07;                           % Michaelis-Menton half saturation concentration (mol kg-1);
+bgc_pars.u0PO4                  = 1.9582242E-06;                           % Michaelis-Menton maximum [PO4] uptake (mol kg-1 yr-1)
+bgc_pars.KPO4                   = 2.1989611E-07;                           % Michaelis-Menton [PO4] half saturation concentration (mol kg-1);
+bgc_pars.bio_tau                = 95.6337;                                 % biological uptake time-scale (days)
+bgc_pars.bio_kT0                = 0.59;                                    % biological uptake temperature dependence scaling constant (dimensionless)
+bgc_pars.bio_keT                = 15.8;                                    % biological uptake temperature dependence e-folding temperature (deg C)
+bgc_pars.KFe                    = 0.1e-9;                                  % [Fe] half saturation (mol kg-1)
 bgc_pars.PO4_restore_timescale  = 30;                                      % nutrient restoring timescale (days)
 bgc_pars.PO4_restore_data_file  = '../experiments/PO4_OBS.mat';            % location of PO4 observations to restore to
 
@@ -38,7 +42,6 @@ bgc_pars.scav_Fe_sf_POC         = 0.344104;                                % mod
 bgc_pars.scav_Fe_sf_CaCO3       = 0.0;                                     % modifier of scavenging rate of dissolved Fe
 bgc_pars.scav_fremin            = 0.0;                                     % scavenged regeneration
 bgc_K_FeL_pP                    = 11.0;                                    % adjust pK' (FeL)
-bgc_pars.POFe_POC               = 250000.0;                                % max C/Fe organic matter ratio
 bgc_pars.FetoC_pP               = -0.4225;                                 % [FeT] dependent Fe:C ratio [Ridgwell, 2001] -- power
 bgc_pars.FetoC_K                = 103684.0;                                % [FeT] dependent Fe:C ratio [Ridgwell, 2001] -- scaling
 bgc_pars.FetoC_C                = 0.0;                                     % [FeT] dependent Fe:C ratio [Ridgwell, 2001] -- constant
@@ -49,6 +52,7 @@ bgc_pars.C_to_P                 = 106.0;                                   % Sto
 bgc_pars.N_to_P                 = 16.0;                                    % Stoichiometric ratio of N:P 
 bgc_pars.O_to_P                 = -170.0;                                  % Stoichiometric ratio of O:P 
 bgc_pars.ALK_to_P               = -16.0;                                   % Stoichiometric ratio of alkalinity:P (-N:P)
+bgc_pars.C_to_Fe                = 250000.0;                                % max C/Fe organic matter ratio
 
 bgc_pars.gastransfer_a          = 0.31;                                    % gas transfer
 
@@ -61,6 +65,8 @@ bgc_pars.restore_DOP_val=1;                                                % glo
 bgc_pars.restore_DIC_val=1;                                                % global modifier for restoring ocn DIC
 bgc_pars.restore_ALK_val=1;                                                % global modifier for restoring ocn ALK
 bgc_pars.restore_O2_val=1;                                                 % global modifier for restoring ocn O2
+bgc_pars.restore_TFe_val=1;                                                % global modifier for restoring ocn Fe
+bgc_pars.restore_TL_val=1;                                                 % global modifier for restoring ocn TL
 
 bgc_pars.restore_pCO2_timescale=1;                                         % timescale (year) for restoring atm pCO2
 bgc_pars.restore_pO2_timescale=1;                                          % timescale (year) for restoring atm pO2
@@ -69,6 +75,8 @@ bgc_pars.restore_DOP_timescale=1;                                          % tim
 bgc_pars.restore_DIC_timescale=1;                                          % timescale (year) for restoring ocn DIC
 bgc_pars.restore_ALK_timescale=1;                                          % timescale (year) for restoring ocn ALK
 bgc_pars.restore_O2_timescale=1;                                           % timescale (year) for restoring ocn O2
+bgc_pars.restore_TFe_timescale=1;                                           % timescale (year) for restoring ocn TFe
+bgc_pars.restore_TL_timescale=1;                                           % timescale (year) for restoring ocn TL
 
 bgc_pars.force_pCO2_val=1;                                                 % global modifier for forcing atm pCO2
 bgc_pars.force_pO2_val=1;                                                  % global modifier for forcing atm pO2
@@ -77,6 +85,8 @@ bgc_pars.force_DOP_val=1;                                                  % glo
 bgc_pars.force_DIC_val=1;                                                  % global modifier for forcing ocn DIC
 bgc_pars.force_ALK_val=1;                                                  % global modifier for forcing ocn ALK
 bgc_pars.force_O2_val=1;                                                   % global modifier for forcing ocn O2
+bgc_pars.force_TFe_val=1;                                                  % global modifier for forcing ocn TFe
+bgc_pars.force_TL_val=1;                                                   % global modifier for forcing ocn TL
 
 bgc_pars.PO4_init=2.159/1e6;                                               % initial PO4 (umol kg-1)    (Ridgwell et al. 2007)
 bgc_pars.DOP_init=0.0235/1e6;                                              % inital DOP (umol kg-1)      (Najjar et al. 2007)

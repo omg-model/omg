@@ -32,7 +32,14 @@ function [dCdt,POM_prodn] = SurfaceProd(SURFACE , parameters)
     % calculate uptake of PO4
     switch bgc_pars.uptake_scheme
         case 'MM' 
+            % Ridgwell et al., (2007) Biogeosciences
             uptake=(seaice.*solfor.*(bgc_pars.u0PO4.*(SURFACE(:,I.PO4)./(SURFACE(:,I.PO4)+bgc_pars.KPO4))));
+        case 'MM_Fe'
+            % van de Velde et al., (2021) GMD
+            FT=bgc_pars.bio_kT0.*exp(parameters.ocn_pars.T(Ib)./bgc_pars.bio_keT);
+            FN=min([SURFACE(:,I.PO4)./(SURFACE(:,I.PO4)+bgc_pars.KPO4),SURFACE(:,I.TFe)./(SURFACE(:,I.TFe)+bgc_pars.KFe)],[],2);
+            Nmin=min([SURFACE(:,I.PO4),bgc_pars.C_to_P.*SURFACE(:,I.TFe)./bgc_pars.C_to_Fe],[],2);
+            uptake=solfor.*seaice.*FT.*FN.*Nmin./bgc_pars.bio_tau;
         case 'restore'
              error('Restore scheme broken by Ben! Need to add PO4_obs to parameter structure.')
 %              uptake=(seaice(Ib)).*((PO4(Ib)-PO4_obs(Ib,dt_yr))*bgc_pars.PO4_restore_timescale);

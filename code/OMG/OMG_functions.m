@@ -67,12 +67,12 @@ function [ dCdt_out , diagnostics , bioinf] = dOMGdt ( t , y , OCEAN , ECC , par
 
         % Surface Biological PO4 uptake and OM production
         switch bgc_pars.uptake_scheme
-            case {'MM','restore'}
-                % PO4-based uptake & export
-                [dCdt(Ib,:),POM_prodn  ] = functions.bgc_fcns.SurfaceProd(SURFACE,parameters); 
             case 'eco'
                 [dCdt(Ib,:),POM_prodn,~,ggr] = functions.eco_fcns.ecosystem(SURFACE,parameters);
                 % third output variable is 'invfit' 
+            otherwise
+                % default PO4-based uptake & export
+                [dCdt(Ib,:),POM_prodn  ] = functions.bgc_fcns.SurfaceProd(SURFACE,parameters); 
         end
 
         % remineralise DOM

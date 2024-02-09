@@ -1250,6 +1250,8 @@ function [conservation_error , inventory] = check_conserve ( TRACERS , inventory
             iPhosphorus = [I.PO4 I.DOP];
         case 'eco'
             iPhosphorus = [I.PO4 I.DOP I.PHY];
+        otherwise
+            iPhosphorus = [I.PO4 I.DOP];
     end
     inventory = sum(ocn_pars.M'*TRACERS(:,iPhosphorus));
 
