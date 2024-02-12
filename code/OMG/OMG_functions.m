@@ -65,6 +65,18 @@ function [ dCdt_out , diagnostics , bioinf] = dOMGdt ( t , y , OCEAN , ECC , par
         [ECC] = functions.gchem_fcns.calc_carbonate_constants(ECC,parameters,functions,false,tcyc);
         [ECC] = functions.gchem_fcns.solve_carbonate_system(ECC,TRACERS,parameters,false);
 
+        % Atmosphere Forcings
+        [dATMdt] = functions.bgc_fcns.atm_forcings ( t , ATM , dATMdt , parameters , forcings );
+
+        % Ocean Forcings
+        [dCdt] = functions.bgc_fcns.ocn_forcings ( t , TRACERS , dCdt , parameters , forcings );
+
+        % Particle Forcings
+        [PARTICLES] = functions.bgc_fcns.sed_forcings ( t , PARTICLES , dCdt , parameters , forcings );
+
+        % Aeolian Fe input
+        [ dCdt ] = functions.bgc_fcns.aeolian_Fe ( dCdt , PARTICLES , parameters );
+
         % Surface Biological PO4 uptake and OM production
         switch bgc_pars.uptake_scheme
             case 'eco'
@@ -86,12 +98,6 @@ function [ dCdt_out , diagnostics , bioinf] = dOMGdt ( t , y , OCEAN , ECC , par
 
         % Air-sea gas exchange
         [ dCdt , dATMdt ] = functions.bgc_fcns.airsea_gas_exchange ( dCdt , dATMdt , TRACERS , ATM , ECC , parameters );
-
-        % Atmosphere Forcings
-        [dATMdt] = functions.bgc_fcns.atm_forcings ( t , ATM , dATMdt , parameters , forcings );
-
-        % Ocean Forcings
-        [dCdt] = functions.bgc_fcns.ocn_forcings ( t , TRACERS , dCdt , parameters , forcings );
 
         % Restore ocean atmosphere carbon inventory
         [dCdt] = functions.bgc_fcns.restore_ocnatm_Cinv ( dCdt , TRACERS , ATM , parameters);

@@ -47,6 +47,9 @@ bgc_pars.FetoC_K                = 103684.0;                                % [Fe
 bgc_pars.FetoC_C                = 0.0;                                     % [FeT] dependent Fe:C ratio [Ridgwell, 2001] -- constant
 bgc_pars.no_fsedFe              = false;                                   % return POFe?
 bgc_pars.fixed_FetoC            = false;                                   % Variable Fe:C?
+bgc_pars.conv_Fe_g_mol          = 17.86e-3;                                % convert g Fe to mol Fe
+bgc_pars.det_Fe_frac            = 0.035;                                   % mass fraction of Fe in aeolian dust deposition
+bgc_pars.conv_det_mol_g         = 60;                                      % convert mol det to g det 
 
 bgc_pars.C_to_P                 = 106.0;                                   % Stoichiometric ratio of C:P 
 bgc_pars.N_to_P                 = 16.0;                                    % Stoichiometric ratio of N:P 
@@ -65,8 +68,10 @@ bgc_pars.restore_DOP_val=1;                                                % glo
 bgc_pars.restore_DIC_val=1;                                                % global modifier for restoring ocn DIC
 bgc_pars.restore_ALK_val=1;                                                % global modifier for restoring ocn ALK
 bgc_pars.restore_O2_val=1;                                                 % global modifier for restoring ocn O2
-bgc_pars.restore_TFe_val=1;                                                % global modifier for restoring ocn Fe
+bgc_pars.restore_TDFe_val=1;                                                % global modifier for restoring ocn Fe
 bgc_pars.restore_TL_val=1;                                                 % global modifier for restoring ocn TL
+bgc_pars.restore_Det_val=1;
+bgc_pars.restore_POP_val=1;
 
 bgc_pars.restore_pCO2_timescale=1;                                         % timescale (year) for restoring atm pCO2
 bgc_pars.restore_pO2_timescale=1;                                          % timescale (year) for restoring atm pO2
@@ -75,8 +80,10 @@ bgc_pars.restore_DOP_timescale=1;                                          % tim
 bgc_pars.restore_DIC_timescale=1;                                          % timescale (year) for restoring ocn DIC
 bgc_pars.restore_ALK_timescale=1;                                          % timescale (year) for restoring ocn ALK
 bgc_pars.restore_O2_timescale=1;                                           % timescale (year) for restoring ocn O2
-bgc_pars.restore_TFe_timescale=1;                                           % timescale (year) for restoring ocn TFe
+bgc_pars.restore_TDFe_timescale=1;                                           % timescale (year) for restoring ocn TFe
 bgc_pars.restore_TL_timescale=1;                                           % timescale (year) for restoring ocn TL
+bgc_pars.restore_Det_timescale=1;
+bgc_pars.restore_POP_timescale=1;
 
 bgc_pars.force_pCO2_val=1;                                                 % global modifier for forcing atm pCO2
 bgc_pars.force_pO2_val=1;                                                  % global modifier for forcing atm pO2
@@ -85,8 +92,10 @@ bgc_pars.force_DOP_val=1;                                                  % glo
 bgc_pars.force_DIC_val=1;                                                  % global modifier for forcing ocn DIC
 bgc_pars.force_ALK_val=1;                                                  % global modifier for forcing ocn ALK
 bgc_pars.force_O2_val=1;                                                   % global modifier for forcing ocn O2
-bgc_pars.force_TFe_val=1;                                                  % global modifier for forcing ocn TFe
+bgc_pars.force_TDFe_val=1;                                                  % global modifier for forcing ocn TFe
 bgc_pars.force_TL_val=1;                                                   % global modifier for forcing ocn TL
+bgc_pars.force_Det_val=1;
+bgc_pars.force_POP_val=1;
 
 bgc_pars.PO4_init=2.159/1e6;                                               % initial PO4 (umol kg-1)    (Ridgwell et al. 2007)
 bgc_pars.DOP_init=0.0235/1e6;                                              % inital DOP (umol kg-1)      (Najjar et al. 2007)

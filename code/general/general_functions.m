@@ -1457,8 +1457,8 @@ function [ gen_pars , eco_pars , I ] = setup_array_indices ( gen_pars , bgc_pars
 
     if(bgc_pars.Fe_cycle)
         gen_pars.n_tracers=gen_pars.n_tracers+1;        % Total Fe
-        I.TFe=gen_pars.n_tracers;
-        OCN_names{gen_pars.n_tracers}='TFe';
+        I.TDFe=gen_pars.n_tracers;
+        OCN_names{gen_pars.n_tracers}='TDFe';
         OCN_long_names{gen_pars.n_tracers}='Total Iron';
         OCN_units{gen_pars.n_tracers}='mol kg-1';
 
@@ -1503,6 +1503,14 @@ function [ gen_pars , eco_pars , I ] = setup_array_indices ( gen_pars , bgc_pars
         I.CaCO3=gen_pars.n_particles;
         SED_names{gen_pars.n_particles}='CaCO3';
         SED_long_names{gen_pars.n_particles}='Calcium Carbonate';
+        SED_units{gen_pars.n_particles}='mol kg-1';
+    end
+
+    if bgc_pars.Fe_cycle
+        gen_pars.n_particles=gen_pars.n_particles+1;    % detritus
+        I.Det=gen_pars.n_particles;
+        SED_names{gen_pars.n_particles}='Det';
+        SED_long_names{gen_pars.n_particles}='Detritus';
         SED_units{gen_pars.n_particles}='mol kg-1';
     end
 
@@ -1942,6 +1950,7 @@ function [ forcings ] = load_forcing_data(gen_pars,bgc_pars,forcings,I,ocn_pars)
 
     forcings.ocn.meta=zeros(gen_pars.n_tracers,4);
     forcings.atm.meta=zeros(gen_pars.n_atm,4);
+    forcings.sed.meta=zeros(gen_pars.n_particles,4);
     
     % atmosphere arrays
     forcings.atm.interp=cell(gen_pars.n_atm,1);
@@ -1949,6 +1958,11 @@ function [ forcings ] = load_forcing_data(gen_pars,bgc_pars,forcings,I,ocn_pars)
     % ocean arrays
     forcings.ocn.data=zeros(ocn_pars.nb,gen_pars.n_tracers);
     forcings.ocn.interp=cell(gen_pars.n_tracers,1);
+
+    % sediment arrays
+    forcings.sed.data=zeros(ocn_pars.nb,gen_pars.n_particles);
+    forcings.sed.interp=cell(gen_pars.n_particles,1);
+
     
     if(~isempty(gen_pars.forcings_directory))
     
@@ -1981,6 +1995,17 @@ function [ forcings ] = load_forcing_data(gen_pars,bgc_pars,forcings,I,ocn_pars)
                     end
                 end
             end
+
+            % load particle meta data
+            for n=1:gen_pars.n_particles
+                for nn=1:size(dir_list,1)
+                    var_name=I.SED_names{n};
+                    force_name=dir_list(nn).name(1:end-4);
+                    if strcmp(var_name,force_name)
+                        forcings.sed.meta(n,:)=load(strcat(dir_loc,dir_list(nn).name));
+                    end
+                end
+            end
             
             dir_list=dir(strcat(dir_loc,'*.sig'));
             dir_n=size(dir_list,1);
@@ -2009,7 +2034,7 @@ function [ forcings ] = load_forcing_data(gen_pars,bgc_pars,forcings,I,ocn_pars)
                         tmp=flipud(load(strcat(dir_loc,force_name,'.sur')));
                         tmp2=zeros(max(ocn_pars.k),36,36); tmp2(1,:,:)=tmp;
                         forcings.ocn.data(:,n)=f2v(tmp2,ocn_pars.i,ocn_pars.j,ocn_pars.rk);
-                        forcings.ocn.data(:,n)=forcings.ocn.data(:,n)./sum(forcings.ocn.data(:,n)); % re-scale so force_val is applied evenly
+                        %forcings.ocn.data(:,n)=forcings.ocn.data(:,n)./sum(forcings.ocn.data(:,n)); % re-scale so force_val is applied evenly
                     end
 
                     % uniform
@@ -2040,6 +2065,42 @@ function [ forcings ] = load_forcing_data(gen_pars,bgc_pars,forcings,I,ocn_pars)
                     end                    
                 end                
             end
+
+             % load particle forcing data
+            for n=1:gen_pars.n_particles
+                for nn=1:size(dir_list,1)
+                    var_name=I.SED_names{n};
+                    force_name=dir_list(nn).name(1:end-4);
+                    if strcmp(var_name,force_name)
+                        tmp=load(strcat(dir_loc,dir_list(nn).name));
+                        %tmp(:,1)=tmp(:,1)-gen_pars.start_year; % scale to starting year
+                        tmp(:,1)=tmp(:,1)*360; % years to days
+                        if tmp(1,1)~=0
+                            tmp=[1.0,0.0;tmp]; % add starting point if not specified
+                        else
+                            tmp(1,1)=1; % otherwise convert to dt
+                        end
+                        tmp(find(diff(tmp(:,1))==0)+1,1)=tmp(find(diff(tmp(:,1))==0)+1,1)+1; % set split points
+                        forcings.sed.interp{n}=griddedInterpolant(tmp(:,1),tmp(:,2));
+                    end
+
+
+                    % surface explicit
+                    if forcings.sed.meta(n,4)
+                        tmp=flipud(load(strcat(dir_loc,force_name,'.sur')));
+                        tmp2=zeros(max(ocn_pars.k),36,36); tmp2(1,:,:)=tmp;
+                        forcings.sed.data(:,n)=f2v(tmp2,ocn_pars.i,ocn_pars.j,ocn_pars.rk);
+                        %forcings.sed.data(:,n)=forcings.sed.data(:,n)./sum(forcings.sed.data(:,n)); % re-scale so force_val is applied evenly
+                    end
+
+                    % uniform
+                    if forcings.sed.meta(n,3)
+                        forcings.sed.data(:,n)=1;
+                        forcings.sed.data(:,n)=forcings.sed.data(:,n)./sum(forcings.sed.data(:,n)); % re-scale so force_val is applied evenly
+                    end
+
+                end
+            end
             
         else
             error('Forcing directory selected but no forcing files found')
@@ -2056,6 +2117,11 @@ function [ forcings ] = load_forcing_data(gen_pars,bgc_pars,forcings,I,ocn_pars)
         forcings.atm.force_scale(1,n)=getfield(bgc_pars,strcat('force_',I.ATM_names{n},'_val'));
         forcings.atm.restore_scale(1,n)=getfield(bgc_pars,strcat('restore_',I.ATM_names{n},'_val'));
         forcings.atm.restore_timescale(1,n)=1./getfield(bgc_pars,strcat('restore_',I.ATM_names{n},'_timescale'))/360; % year -> day-1
+    end
+    for n=1:gen_pars.n_particles
+        forcings.sed.force_scale(1,n)=getfield(bgc_pars,strcat('force_',I.SED_names{n},'_val'));
+        forcings.sed.restore_scale(1,n)=getfield(bgc_pars,strcat('restore_',I.SED_names{n},'_val'));
+        forcings.sed.restore_timescale(1,n)=1./getfield(bgc_pars,strcat('restore_',I.SED_names{n},'_timescale'))/360; % year -> day-1
     end
         
 end

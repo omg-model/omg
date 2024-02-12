@@ -10,8 +10,10 @@ function [ bgc_fcns ] = biogeochemistry_functions ( )
     bgc_fcns.calc_gasexchange_constants=@calc_gasexchange_constants;
     bgc_fcns.atm_forcings=@atm_forcings;
     bgc_fcns.ocn_forcings=@ocn_forcings;
+    bgc_fcns.sed_forcings=@sed_forcings;
     bgc_fcns.restore_ocnatm_Cinv=@restore_ocnatm_Cinv;
     bgc_fcns.initialise_gasex_constants=@initialise_gasex_constants;
+    bgc_fcns.aeolian_Fe=@aeolian_Fe;
 
 end
 
@@ -406,10 +408,10 @@ function [ dATMdt ] = atm_forcings ( t , ATM , dATMdt , parameters , forcings )
             sig=forcings.atm.interp{n}(t);
             dATMdt(:,n) = dATMdt(:,n) + (sig .* forcings.atm.restore_scale(1,n) - ATM(1,n)) * forcings.atm.restore_timescale(1,n);   
         end
-        % forcing (mol yr-1) -> mol mol-1 yr-1
+        % forcing (mol mol-1 day-1)
         if forcings.atm.meta(n,2)
             sig=forcings.atm.interp{n}(t);
-            dATMdt(:,n) = dATMdt(:,n) + (sig .* forcings.atm.data(:,n) * forcings.atm.force_scale(1,n) ) ./ parameters.ocn_pars.atm_mol;
+            dATMdt(:,n) = dATMdt(:,n) + (sig .* forcings.atm.data(:,n) * forcings.atm.force_scale(1,n) ) ./ parameters.ocn_pars.atm_mol ./ parameters.gen_pars.conv_d_yr;
         end
     end
  
@@ -429,10 +431,31 @@ function [ dCdt ] = ocn_forcings ( t , TRACERS , dCdt , parameters , forcings)
             dCdt(:,n) = dCdt(:,n) + ((sig .* forcings.ocn.restore_scale(1,n)) - TRACERS(:,n)) * forcings.ocn.restore_timescale(1,n);
 
         end
-        % forcing (mol yr-1) -> mol kg-1 yr-1
+        % forcing (mol kg-1 day-1)
         if forcings.ocn.meta(n,2)
             sig=forcings.ocn.interp{n}(t);
-            dCdt(:,n) = dCdt(:,n)+(sig .* forcings.ocn.data(:,n) * forcings.ocn.force_scale(1,n) ) ./ parameters.ocn_pars.M;
+            dCdt(:,n) = dCdt(:,n)+(sig .* forcings.ocn.data(:,n) * forcings.ocn.force_scale(1,n) ) .* parameters.ocn_pars.rM ./ parameters.gen_pars.conv_d_yr;
+        end
+    end
+      
+end
+
+function [ PARTICLES ] = sed_forcings ( t , PARTICLES , dCdt , parameters , forcings)
+    
+    for n=1:size(forcings.sed.meta,1)
+        
+        % restoring (mol kg-1)
+        if forcings.sed.meta(n,1)
+            sig=forcings.sed.interp{n}(t);
+            %dCdt(:,n) = dCdt(:,n) + ((sig .* forcings.ocn.data(:,n) * forcings.ocn.restore_scale(1,n)) - TRACERS(:,n)) * parameters.bgc_pars.restore_timescale;
+            %dCdt(:,n) = dCdt(:,n) + (((sig .* sum(forcings.ocn.restore_scale(1,n)*sum(parameters.ocn_pars.M))) - sum(TRACERS(:,n).*parameters.ocn_pars.M)) * parameters.bgc_pars.restore_timescale)*forcings.ocn.data(:,n)./parameters.ocn_pars.M;  
+            PARTICLES(:,n) = PARTICLES(:,n) + ((sig .* forcings.sed.restore_scale(1,n)) - PARTICLES(:,n)) * forcings.sed.restore_timescale(1,n);
+
+        end
+        % forcing (mol kg-1 day-1)
+        if forcings.sed.meta(n,2)
+            sig=forcings.sed.interp{n}(t);
+            PARTICLES(:,n) = dCdt(:,n)+(sig .* forcings.sed.data(:,n) * forcings.sed.force_scale(1,n) ) .* parameters.ocn_pars.rM ./ parameters.gen_pars.conv_d_yr;
         end
     end
       
@@ -480,6 +503,35 @@ function [Sc_constants , sol_constants] = initialise_gasex_constants ( gen_pars 
     end
                 
             
+end
+
+function [ dCdt ] = aeolian_Fe ( dCdt , PARTICLES , parameters )
+
+    if parameters.bgc_pars.Fe_cycle
+
+    I=parameters.ind_pars;
+
+    % get total Fe input from aeolian deposition of dust
+    % using mass fraction, so convert det from mol kg-1 
+    dust_Fe = parameters.bgc_pars.conv_Fe_g_mol .* ...
+       parameters.bgc_pars.det_Fe_frac .* ...
+       parameters.bgc_pars.conv_det_mol_g .* ...
+       PARTICLES(:,I.Det).*parameters.ocn_pars.M;
+
+    % solubility
+    det_flux=PARTICLES(:,I.Det).*parameters.ocn_pars.M; % mol day-1
+    Fe_sol = det_flux.^(parameters.bgc_pars.det_Fe_sol_exp-1.0);
+    Fe_sol(isinf(Fe_sol))=0.0;
+
+    % scale solubility to global value
+    Fe_sol_scale = sum(Fe_sol.*det_flux) ./ sum(det_flux);
+    Fe_sol    = Fe_sol .* (parameters.bgc_pars.det_Fe_sol ./ Fe_sol_scale);
+
+    % apply solubility (mol kg-1 day-1)
+    dCdt(:,I.TDFe) = dCdt(:,I.TDFe) + (Fe_sol .* dust_Fe)./parameters.ocn_pars.M;
+
+    end
+
 end
 
 
