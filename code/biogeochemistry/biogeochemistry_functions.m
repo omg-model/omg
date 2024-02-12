@@ -519,7 +519,7 @@ function [ dCdt ] = aeolian_Fe ( dCdt , PARTICLES , parameters )
        PARTICLES(:,I.Det).*parameters.ocn_pars.M;
 
     % solubility
-    det_flux=PARTICLES(:,I.Det).*parameters.ocn_pars.M; % mol day-1
+    det_flux=PARTICLES(:,I.Det).*parameters.gen_pars.conv_d_yr; % mol year-1
     Fe_sol = det_flux.^(parameters.bgc_pars.det_Fe_sol_exp-1.0);
     Fe_sol(isinf(Fe_sol))=0.0;
 
