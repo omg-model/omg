@@ -14,6 +14,8 @@ function [ bgc_fcns ] = biogeochemistry_functions ( )
     bgc_fcns.restore_ocnatm_Cinv=@restore_ocnatm_Cinv;
     bgc_fcns.initialise_gasex_constants=@initialise_gasex_constants;
     bgc_fcns.aeolian_Fe=@aeolian_Fe;
+    bgc_fcns.Fe_speciation=@Fe_speciation;
+    bgc_fcns.scavenge_Fe=@scavenge_Fe;
 
 end
 
@@ -531,6 +533,42 @@ function [ dCdt ] = aeolian_Fe ( dCdt , PARTICLES , parameters )
     dCdt(:,I.TDFe) = dCdt(:,I.TDFe) + (Fe_sol .* dust_Fe)./parameters.ocn_pars.M;
 
     end
+
+end
+
+function [ Fe , FeL , L ] = Fe_speciation ( TDFe , TL , K_FeL )
+
+    p = [ 1 , -(TL+TDFe+1/K_FeL) , TDFe*TL ];
+    r = roots(p);
+
+    if min(r)<1e-15
+        FeL=max(r);
+    else
+        FeL=min(r);
+    end
+
+    Fe = TDFe - FeL;
+    L  = TL - FeL;
+
+end
+
+
+function [ scav_Fe ] = scavenge_Fe ( Fe , parameters , POC )
+
+    % convert particle concentration from mol kg-1 to mg l-1
+    Cp = POC * 1e6 * 12.01 * (1000/1027.649);
+
+    % scavenging rate (d-1)
+    scav_Fe_k = parameters.bgc_pars.scav_Fe_sf_POC ...
+        * parameters.bgc_pars.scav_Fe_k0 ...
+        (Cp.^parameters.bgc_pars.scav_Fe_exp);
+    
+    % scavenged Fe (mol kg-1 d-1)
+    scav_Fe = scav_Fe_k .* Fe;
+
+    % cap at maximum available Fe
+    ind=scav_Fe>Fe;
+    scav_Fe(ind)=Fe(ind);
 
 end
 
