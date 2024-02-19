@@ -1,7 +1,7 @@
 %% 8 level annual preindustrial 
 
 % Transport Matrix
-gen_pars.TM_path='../../TM_data/worjbe2';                                  % path to TM files
+gen_pars.TM_path='../../TM_data/worbe2';                                  % path to TM files
 
 % Model Setup
 gen_pars.TM_dt=1/96;                                                        % TM timestep (year)
@@ -14,5 +14,3 @@ bgc_pars.O2_select=false;                                                   % fl
 bgc_pars.uptake_scheme='MM';                                                % Biological uptake scheme, default: Michaelis Menton
 bgc_pars.remin_scheme='matrix';                                             % POM remineralisation scheme
 bgc_pars.remin_function='exponential';                                      % POM remineralisation function
-
-
