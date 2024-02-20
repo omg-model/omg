@@ -17,24 +17,68 @@ end
 bgc_pars.POM_matrix   = POM_matrix;
 bgc_pars.CaCO3_matrix = CaCO3_matrix;
 
-% stoichiometry - JDW: move this to tracer definitions as defines
+% uptake stoichiometry - JDW: move this to tracer definitions as defines
 % relationships between tracers?
-bgc_pars.stoichiometry = zeros(ocn_pars.nb,gen_pars.n_bgc_tracers);
+bgc_pars.uptake_stoichiometry = zeros(ocn_pars.nb,gen_pars.n_bgc_tracers);
 
-bgc_pars.stoichiometry(:,I.PO4)=1.0;
-bgc_pars.stoichiometry(:,I.DOP)=0.0;
+bgc_pars.uptake_stoichiometry(:,I.PO4)=1.0;
+bgc_pars.uptake_stoichiometry(:,I.DOP)=0.0;
 if(bgc_pars.CARBCHEM_select)
-    bgc_pars.stoichiometry(:,I.DIC)=bgc_pars.C_to_P;
-    bgc_pars.stoichiometry(:,I.ALK)=bgc_pars.ALK_to_P;
+    bgc_pars.uptake_stoichiometry(:,I.DIC)=bgc_pars.C_to_P;
+    bgc_pars.uptake_stoichiometry(:,I.ALK)=bgc_pars.ALK_to_P;
+    bgc_pars.uptake_stoichiometry(:,I.DOC)=-bgc_pars.C_to_P;
 end
 if(bgc_pars.O2_select)
-    bgc_pars.stoichiometry(:,I.O2)=bgc_pars.O_to_P;
+    bgc_pars.uptake_stoichiometry(:,I.O2)=bgc_pars.O_to_P;
 end
 if(bgc_pars.Fe_cycle)
-    bgc_pars.stoichiometry(:,I.TDFe)=bgc_pars.C_to_Fe;
-    bgc_pars.stoichiometry(:,I.TL)=0;
+    bgc_pars.uptake_stoichiometry(:,I.TDFe)=bgc_pars.C_to_Fe;
+    bgc_pars.uptake_stoichiometry(:,I.TL)=0;
 end
 
+
+% remin stoichiometry - JDW: move this to tracer definitions as defines
+% relationships between tracers?
+bgc_pars.remin_stoichiometry = zeros(ocn_pars.nb,gen_pars.n_bgc_tracers);
+
+bgc_pars.remin_stoichiometry(:,I.PO4)=0.0;
+bgc_pars.remin_stoichiometry(:,I.DOP)=0.0;
+if(bgc_pars.CARBCHEM_select)
+    bgc_pars.remin_stoichiometry(:,I.DIC)=0.0;
+    bgc_pars.remin_stoichiometry(:,I.ALK)=bgc_pars.ALK_to_P;
+    bgc_pars.remin_stoichiometry(:,I.DOC)=0.0;
+end
+if(bgc_pars.O2_select)
+    bgc_pars.remin_stoichiometry(:,I.O2)=bgc_pars.O_to_P;
+end
+if(bgc_pars.Fe_cycle)
+    bgc_pars.remin_stoichiometry(:,I.TDFe)=0.0;
+    bgc_pars.remin_stoichiometry(:,I.TL)=0.0;
+end
+
+% map OCN to DOM and Particles
+row=find(~cellfun(@isempty,I.OCN_to_DOM));
+col=0; count=1;
+for n=1:numel(I.OCN_to_DOM)
+    tmp=strfind(I.OCN_names,I.OCN_to_DOM{n});
+        if ~isempty(find(~cellfun(@isempty,tmp)))
+        col(count)=find(~cellfun(@isempty,tmp));
+        count=count+1;
+    end
+end    
+bgc_pars.mapOCN_DOM=sparse(row,col,ones(size(row)),gen_pars.n_bgc_tracers,gen_pars.n_bgc_tracers);
+
+
+row=find(~cellfun(@isempty,I.OCN_to_POM));
+col=0; count=1;
+for n=1:numel(I.OCN_to_POM)
+    tmp=strfind(I.SED_names,I.OCN_to_POM{n});
+        if ~isempty(find(~cellfun(@isempty,tmp)))
+        col(count)=find(~cellfun(@isempty,tmp));
+        count=count+1;
+    end
+end    
+bgc_pars.mapOCN_POM=sparse(row,col,ones(size(row)),gen_pars.n_particles,gen_pars.n_particles);
 
 % air-sea gas exchange constants
 [bgc_pars.Sc_constants,bgc_pars.sol_constants]=bgc_fcns.initialise_gasex_constants(gen_pars,I);

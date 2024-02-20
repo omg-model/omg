@@ -22,7 +22,7 @@ end
 
 %%----- SUBROUTINES -----%%
 %%
-function [dCdt,POM_prodn] = SurfaceProd(SURFACE , parameters)
+function [dCdt,POM_prodn] = SurfaceProd(dCdt , SURFACE , parameters)
     % BAW changed i/o format to pass dCdt and Particle_Export (implicit particulate production)
     gen_pars=parameters.gen_pars;
     bgc_pars=parameters.bgc_pars;
@@ -54,13 +54,23 @@ function [dCdt,POM_prodn] = SurfaceProd(SURFACE , parameters)
         otherwise
             error('No PO4 uptake routine selected')
     end
+
+    % calculate variable Fe:C as f(TDFe)
+    if bgc_pars.Fe_cycle
+        bgc_pars.uptake_stoichiometry(Ib,I.TDFe)=calc_variable_Fe_to_P( SURFACE , parameters );
+    end
+    
+    uptake=uptake.*bgc_pars.uptake_stoichiometry(Ib,:);
+    dCdt(Ib,1:gen_pars.n_bgc_tracers) = dCdt(Ib,1:gen_pars.n_bgc_tracers)  - uptake;
+    dCdt(Ib,1:gen_pars.n_bgc_tracers) = dCdt(Ib,1:gen_pars.n_bgc_tracers)  + uptake.*bgc_pars.DOP_frac*bgc_pars.mapOCN_DOM;
+    POM_prodn = uptake.*bgc_pars.rDOP_frac*bgc_pars.mapOCN_POM; 
     
     % Calculate uptake of all BGC tracers from PO4 uptake, using bgc_pars.stoichiometry
-    dCdt(:,1:gen_pars.n_bgc_tracers) = -uptake .* bgc_pars.stoichiometry(Ib,:);
+    %dCdt(:,1:gen_pars.n_bgc_tracers) = -uptake .* bgc_pars.uptake_stoichiometry(Ib,:);
     % Add dissolved organic matter production to dCdt(:,I.DOP) 
-    dCdt(:,I.DOP) = dCdt(:,I.DOP) + uptake.*bgc_pars.DOP_frac; 
+    %dCdt(:,I.DOP) = dCdt(:,I.DOP) + uptake.*bgc_pars.DOP_frac; 
     % Output implicit particulate organic matter production as dPOPdt
-    POM_prodn        = uptake.*bgc_pars.rDOP_frac; 
+    %POM_prodn        = uptake.*bgc_pars.rDOP_frac; 
     
 %         
 %         rainratio_exponent=(CARBCHEM(Ib,I.SAT_CA)-1).^bgc_pars.red_PIC_POC_mod;
@@ -87,12 +97,21 @@ function [dCdt] = remin_DOM(TRACERS , dCdt , parameters)
     I        = parameters.ind_pars;
         
     % remineralisation of DOM
-    DOM_remin=TRACERS(:,I.DOP) .* bgc_pars.DOP_k;
+    %DOM_remin=TRACERS(:,I.DOP) .* bgc_pars.DOP_k;
+    % first calculate remineralisation for *everything*, then map remin of DOM
+    % tracers back to normal tracers
+    remin = TRACERS .* bgc_pars.DOP_k * bgc_pars.mapOCN_DOM';
+    
+    % add effects of organic matter remineralisation stoichiometry
+    remin = remin + remin(:,I.PO4) .* bgc_pars.remin_stoichiometry; 
+
+    % update tendencies 
+    dCdt = dCdt + remin - remin*bgc_pars.mapOCN_DOM; 
     
     % subtract remin from DOP column
-    dCdt(:,I.DOP) = dCdt(:,I.DOP) - DOM_remin;
+    %dCdt(:,I.DOP) = dCdt(:,I.DOP) - DOM_remin;
     % add remin to BGC columns according to bgc_pars.stoichiometry
-    dCdt(:,1:gen_pars.n_bgc_tracers) = dCdt(:,1:gen_pars.n_bgc_tracers) + DOM_remin.*bgc_pars.stoichiometry; 
+    %dCdt(:,1:gen_pars.n_bgc_tracers) = dCdt(:,1:gen_pars.n_bgc_tracers) + DOM_remin.*bgc_pars.stoichiometry; 
 
 end
 
@@ -108,11 +127,30 @@ function [dCdt , PARTICLES] = remin_POM ( dCdt , POM_prodn , PARTICLES , paramet
 
     i_remin=1:gen_pars.n_bgc_tracers;
 
-    % Take POM production from the surface layer and redistribute across other layers
+    % Take POM production from the surface layer and redistribute across water column
     POM_remin=bgc_pars.POM_matrix(:,ocn_pars.Ib)*POM_prodn;
+    
+    % get flux hitting seafloor
+    POM_total_export = sum(POM_prodn.*ocn_pars.M(ocn_pars.Ib)); % mol
+    for n=1:size(POM_remin,2)
+        benthic_remin(:,n)=(POM_total_export(n)-accumarray(ocn_pars.wc,POM_remin(:,n).*ocn_pars.M)).*ocn_pars.rM(ocn_pars.Iben);
+    end
+    
+    % reflective boundary at seafloor
+    if bgc_pars.Fe_cycle
+        benthic_flux(:,I.POFe)=0; % except for particulate-bound Fe
+    end
+    POM_remin(ocn_pars.Iben) = POM_remin(ocn_pars.Iben) + benthic_remin;
+
+    % 
+    dCdt(:,i_remin) = dCdt(:,i_remin) + benthic_remin .* bgc_pars.stoichiometry;
+
+
+
+
 
     % add remin to dCdt
-    dCdt(:,i_remin) = dCdt(:,i_remin) + POM_remin .* bgc_pars.stoichiometry;
+    %dCdt(:,i_remin) = dCdt(:,i_remin) + POM_remin .* bgc_pars.stoichiometry;
 
     % get flux hitting seafloor
     benthic_remin=(1-accumarray(ocn_pars.wc,POM_remin.*ocn_pars.M).*ocn_pars.rM(ocn_pars.Ib));
@@ -589,12 +627,13 @@ function [ Fe_to_P ] = calc_variable_Fe_to_P ( TRACERS , parameters )
 
     % note, C:FE max is pre-set
 
-    ind=TRACERS(:,parameters.ind_pars.TDFe)>0.125e-9;
+    Ib=parameters.ocn_pars.Ib;
+    ind=TRACERS(Ib,parameters.ind_pars.TDFe)>0.125e-9;
 
-    Fe_to_C=parameters.bgc_pars.stoichiometry(:,parameters.ind_pars.TDFe);
+    Fe_to_C=parameters.bgc_pars.stoichiometry(Ib,parameters.ind_pars.TDFe);
     Fe_to_C(ind) = min([Fe_to_C(ind),...
         (parameters.bgc_pars.FetoC_C + parameters.bgc_pars.FetoC_K .* ...
-        (1e9.*TRACERS(:,parameters.ind_pars.TDFe) .^ parameters.bgc_pars.FetoC_pP))],[],2);
+        (1e9.*TRACERS(Ib,parameters.ind_pars.TDFe) .^ parameters.bgc_pars.FetoC_pP))],[],2);
     Fe_to_C=1./Fe_to_C;
 
     Fe_to_P=Fe_to_C.*parameters.bgc_pars.C_to_P;

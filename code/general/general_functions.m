@@ -1425,14 +1425,30 @@ function [ gen_pars , eco_pars , I ] = setup_array_indices ( gen_pars , bgc_pars
 
 % Setup Ocean Indices
 
-    gen_pars.n_tracers=2;   % will always have PO4 and DOP
+    gen_pars.n_tracers=0; 
 
     I.OCN_Indices = '------------------------------------------------';
-    I.PO4=1;
-    I.DOP=2;   
-    OCN_names={'PO4','DOP'};
-    OCN_long_names={'Phosphate','Dissolved Organic Phosphorus'};
-    OCN_units={'mol kg-1','mol kg-1'};
+    % I.PO4=1;
+    % I.DOP=2;   
+    % OCN_names={'PO4','DOP'};
+    % OCN_long_names={'Phosphate','Dissolved Organic Phosphorus'};
+    % OCN_units={'mol kg-1','mol kg-1'};
+
+
+    gen_pars.n_tracers=gen_pars.n_tracers+1;        % PO4
+    I.PO4=gen_pars.n_tracers;
+    OCN_names{gen_pars.n_tracers}='PO4';
+    OCN_long_names{gen_pars.n_tracers}='Phosphate';
+    OCN_units{gen_pars.n_tracers}='mol kg-1';
+    OCN_to_DOM{gen_pars.n_tracers}='DOP';
+    OCN_to_POM{gen_pars.n_tracers}='POP';
+
+    gen_pars.n_tracers=gen_pars.n_tracers+1;        % DOP
+    I.DOP=gen_pars.n_tracers;
+    OCN_names{gen_pars.n_tracers}='DOP';
+    OCN_long_names{gen_pars.n_tracers}='Dissolved Organic Phosphorus';
+    OCN_units{gen_pars.n_tracers}='mol kg-1';
+
 
     if(bgc_pars.O2_select)        
         gen_pars.n_tracers=gen_pars.n_tracers+1;        % O2
@@ -1448,11 +1464,21 @@ function [ gen_pars , eco_pars , I ] = setup_array_indices ( gen_pars , bgc_pars
         OCN_names{gen_pars.n_tracers}='DIC';
         OCN_long_names{gen_pars.n_tracers}='Dissolved Inorganic Carbon';
         OCN_units{gen_pars.n_tracers}='mol kg-1';
+        OCN_to_DOM{gen_pars.n_tracers}='DOC';
+        OCN_to_POM{gen_pars.n_tracers}='POC';
+
         gen_pars.n_tracers=gen_pars.n_tracers+1;        % ALK
         I.ALK=gen_pars.n_tracers;
         OCN_names{gen_pars.n_tracers}='ALK';
         OCN_long_names{gen_pars.n_tracers}='Alkalinity';
         OCN_units{gen_pars.n_tracers}='mol kg-1';
+
+        gen_pars.n_tracers=gen_pars.n_tracers+1;        % DOC
+        I.DOC=gen_pars.n_tracers;
+        OCN_names{gen_pars.n_tracers}='DOC';
+        OCN_long_names{gen_pars.n_tracers}='Dissolved Organic Carbon';
+        OCN_units{gen_pars.n_tracers}='mol kg-1';
+
     end
 
     if(bgc_pars.Fe_cycle)
@@ -1461,11 +1487,19 @@ function [ gen_pars , eco_pars , I ] = setup_array_indices ( gen_pars , bgc_pars
         OCN_names{gen_pars.n_tracers}='TDFe';
         OCN_long_names{gen_pars.n_tracers}='Total Iron';
         OCN_units{gen_pars.n_tracers}='mol kg-1';
+        OCN_to_DOM{gen_pars.n_tracers}='DOFe';
+        OCN_to_POM{gen_pars.n_tracers}='POFe';
 
         gen_pars.n_tracers=gen_pars.n_tracers+1;        % Total Ligands
         I.TL=gen_pars.n_tracers;
         OCN_names{gen_pars.n_tracers}='TL';
         OCN_long_names{gen_pars.n_tracers}='Total Ligands';
+        OCN_units{gen_pars.n_tracers}='mol kg-1';
+
+        gen_pars.n_tracers=gen_pars.n_tracers+1;        % DOFe
+        I.DOFe=gen_pars.n_tracers;
+        OCN_names{gen_pars.n_tracers}='DOFe';
+        OCN_long_names{gen_pars.n_tracers}='Dissolved Organic Fe';
         OCN_units{gen_pars.n_tracers}='mol kg-1';
 
     end
@@ -1487,10 +1521,12 @@ function [ gen_pars , eco_pars , I ] = setup_array_indices ( gen_pars , bgc_pars
     I.OCN_names      = OCN_names;
     I.OCN_long_names = OCN_long_names;
     I.OCN_units      = OCN_units;
+    I.OCN_to_DOM     = OCN_to_DOM;
+    I.OCN_to_POM     = OCN_to_POM;
 
 % Setup Particulate Indices
 
-    gen_pars.n_particles=1; % will always have POM (POP)
+    gen_pars.n_particles=1; 
     
     I.SED_Indices = '------------------------------------------------';
     I.POM=1;
@@ -1499,6 +1535,13 @@ function [ gen_pars , eco_pars , I ] = setup_array_indices ( gen_pars , bgc_pars
     SED_units={'mol kg-1'};
 
     if(bgc_pars.CARBCHEM_select)
+
+        gen_pars.n_particles=gen_pars.n_particles+1;    % POC
+        I.POC=gen_pars.n_particles;
+        SED_names{gen_pars.n_particles}='POC';
+        SED_long_names{gen_pars.n_particles}='Particulate Organic Carbon';
+        SED_units{gen_pars.n_particles}='mol kg-1';
+
         gen_pars.n_particles=gen_pars.n_particles+1;    % CaCO3
         I.CaCO3=gen_pars.n_particles;
         SED_names{gen_pars.n_particles}='CaCO3';
@@ -1512,7 +1555,27 @@ function [ gen_pars , eco_pars , I ] = setup_array_indices ( gen_pars , bgc_pars
         SED_names{gen_pars.n_particles}='Det';
         SED_long_names{gen_pars.n_particles}='Detritus';
         SED_units{gen_pars.n_particles}='mol kg-1';
+
+        gen_pars.n_particles=gen_pars.n_particles+1;    % PFe
+        I.PFe=gen_pars.n_particles;
+        SED_names{gen_pars.n_particles}='POFe';
+        SED_long_names{gen_pars.n_particles}='Particulate Iron';
+        SED_units{gen_pars.n_particles}='mol kg-1';
     end
+
+    if gen_pars.n_particles<gen_pars.n_bgc_tracers
+        for n=1:gen_pars.n_bgc_tracers-gen_pars.n_particles
+            name=['DUM' num2str(n)];
+            gen_pars.n_particles=gen_pars.n_particles+1;    % dummy
+            eval(['I.' name '=gen_pars.n_particles;']);
+            SED_names{gen_pars.n_particles}=name;
+            SED_long_names{gen_pars.n_particles}=name;
+            SED_units{gen_pars.n_particles}='mol kg-1';
+        end
+    end
+
+
+    gen_pars.n_particles=gen_pars.n_bgc_tracers; % due to mapping matrix multiplication, set this equal to tracers. Will work if SED>=OCN!
 
     I.SED_names      = SED_names;
     I.SED_long_names = SED_long_names;
@@ -1947,6 +2010,26 @@ end
 
 %%
 function [ forcings ] = load_forcing_data(gen_pars,bgc_pars,forcings,I,ocn_pars)
+
+
+    % set default forcing values for each tracer if not already set by user
+    for n=1:gen_pars.n_bgc_tracers
+        if ~isfield(bgc_pars,['restore_' I.OCN_names{n} '_val']) eval(['bgc_pars.restore_' I.OCN_names{n} '_val= 1.0 ;']); end
+        if ~isfield(bgc_pars,['force_' I.OCN_names{n} '_val']) eval(['bgc_pars.force_' I.OCN_names{n} '_val= 1.0 ;']); end
+        if ~isfield(bgc_pars,['restore_' I.OCN_names{n} '_timescale']) eval(['bgc_pars.restore_' I.OCN_names{n} '_timescale= 1.0 ;']); end
+    end
+
+    for n=1:gen_pars.n_atm
+        if ~isfield(bgc_pars,['restore_' I.ATM_names{n} '_val']) eval(['bgc_pars.restore_' I.ATM_names{n} '_val= 1.0 ;']); end
+        if ~isfield(bgc_pars,['force_' I.ATM_names{n} '_val']) eval(['bgc_pars.force_' I.ATM_names{n} '_val= 1.0 ;']); end
+        if ~isfield(bgc_pars,['restore_' I.ATM_names{n} '_timescale']) eval(['bgc_pars.restore_' I.ATM_names{n} '_timescale= 1.0 ;']); end
+    end
+
+    for n=1:gen_pars.n_particles
+        if ~isfield(bgc_pars,['restore_' I.SED_names{n} '_val']) eval(['bgc_pars.restore_' I.SED_names{n} '_val= 1.0 ;']); end
+        if ~isfield(bgc_pars,['force_' I.SED_names{n} '_val']) eval(['bgc_pars.force_' I.SED_names{n} '_val= 1.0 ;']); end
+        if ~isfield(bgc_pars,['restore_' I.SED_names{n} '_timescale']) eval(['bgc_pars.restore_' I.SED_names{n} '_timescale= 1.0 ;']); end
+    end
 
     forcings.ocn.meta=zeros(gen_pars.n_tracers,4);
     forcings.atm.meta=zeros(gen_pars.n_atm,4);

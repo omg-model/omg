@@ -77,11 +77,6 @@ function [ dCdt_out , diagnostics , bioinf] = dOMGdt ( t , y , OCEAN , ECC , par
         % Aeolian Fe input
         [ dCdt ] = functions.bgc_fcns.aeolian_Fe ( dCdt , PARTICLES , parameters );
 
-        % calculate variable Fe:C as f(TDFe)
-        if bgc_pars.Fe_cycle
-            bgc_pars.stoichiometry(Ib,I.TDFe)=calc_variable_Fe_to_P( TRACERS , parameters );
-        end
-
         % Surface Biological PO4 uptake and OM production
         switch bgc_pars.uptake_scheme
             case 'eco'
@@ -89,7 +84,7 @@ function [ dCdt_out , diagnostics , bioinf] = dOMGdt ( t , y , OCEAN , ECC , par
                 % third output variable is 'invfit' 
             otherwise
                 % default PO4-based uptake & export
-                [dCdt(Ib,:),POM_prodn  ] = functions.bgc_fcns.SurfaceProd(SURFACE,parameters); 
+                [dCdt,POM_prodn  ] = functions.bgc_fcns.SurfaceProd(dCdt,SURFACE,parameters); 
         end
 
         % remineralise DOM
