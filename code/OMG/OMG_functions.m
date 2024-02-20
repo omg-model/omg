@@ -77,6 +77,11 @@ function [ dCdt_out , diagnostics , bioinf] = dOMGdt ( t , y , OCEAN , ECC , par
         % Aeolian Fe input
         [ dCdt ] = functions.bgc_fcns.aeolian_Fe ( dCdt , PARTICLES , parameters );
 
+        % calculate variable Fe:C as f(TDFe)
+        if bgc_pars.Fe_cycle
+            bgc_pars.stoichiometry(Ib,I.TDFe)=calc_variable_Fe_to_P( TRACERS , parameters );
+        end
+
         % Surface Biological PO4 uptake and OM production
         switch bgc_pars.uptake_scheme
             case 'eco'

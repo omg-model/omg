@@ -16,6 +16,7 @@ function [ bgc_fcns ] = biogeochemistry_functions ( )
     bgc_fcns.aeolian_Fe=@aeolian_Fe;
     bgc_fcns.Fe_speciation=@Fe_speciation;
     bgc_fcns.scavenge_Fe=@scavenge_Fe;
+    bgc_fcns.calc_variable_Fe_to_P=@calc_variable_Fe_to_P;
 
 end
 
@@ -41,8 +42,8 @@ function [dCdt,POM_prodn] = SurfaceProd(SURFACE , parameters)
         case 'MM_Fe'
             % van de Velde et al., (2021) GMD
             FT=bgc_pars.bio_kT0.*exp(parameters.ocn_pars.T(Ib)./bgc_pars.bio_keT);
-            FN=min([SURFACE(:,I.PO4)./(SURFACE(:,I.PO4)+bgc_pars.KPO4),SURFACE(:,I.TFe)./(SURFACE(:,I.TFe)+bgc_pars.KFe)],[],2);
-            Nmin=min([SURFACE(:,I.PO4),bgc_pars.C_to_P.*SURFACE(:,I.TFe)./bgc_pars.C_to_Fe],[],2);
+            FN=min([SURFACE(:,I.PO4)./(SURFACE(:,I.PO4)+bgc_pars.KPO4),SURFACE(:,I.TDFe)./(SURFACE(:,I.TDFe)+bgc_pars.KFe)],[],2);
+            Nmin=min([SURFACE(:,I.PO4),bgc_pars.C_to_P.*SURFACE(:,I.TDFe)./bgc_pars.C_to_Fe],[],2);
             uptake=solfor.*seaice.*FT.*FN.*Nmin./bgc_pars.bio_tau;
         case 'restore'
              error('Restore scheme broken by Ben! Need to add PO4_obs to parameter structure.')
@@ -54,8 +55,8 @@ function [dCdt,POM_prodn] = SurfaceProd(SURFACE , parameters)
             error('No PO4 uptake routine selected')
     end
     
-    % Calculate uptake of all BGC tracers from PO4 uptake, using bgc_pars.stoichiometry vector
-    dCdt(:,1:gen_pars.n_bgc_tracers) = -uptake * bgc_pars.stoichiometry;
+    % Calculate uptake of all BGC tracers from PO4 uptake, using bgc_pars.stoichiometry
+    dCdt(:,1:gen_pars.n_bgc_tracers) = -uptake .* bgc_pars.stoichiometry(Ib,:);
     % Add dissolved organic matter production to dCdt(:,I.DOP) 
     dCdt(:,I.DOP) = dCdt(:,I.DOP) + uptake.*bgc_pars.DOP_frac; 
     % Output implicit particulate organic matter production as dPOPdt
@@ -91,7 +92,7 @@ function [dCdt] = remin_DOM(TRACERS , dCdt , parameters)
     % subtract remin from DOP column
     dCdt(:,I.DOP) = dCdt(:,I.DOP) - DOM_remin;
     % add remin to BGC columns according to bgc_pars.stoichiometry
-    dCdt(:,1:gen_pars.n_bgc_tracers) = dCdt(:,1:gen_pars.n_bgc_tracers) + DOM_remin*bgc_pars.stoichiometry; 
+    dCdt(:,1:gen_pars.n_bgc_tracers) = dCdt(:,1:gen_pars.n_bgc_tracers) + DOM_remin.*bgc_pars.stoichiometry; 
 
 end
 
@@ -111,10 +112,21 @@ function [dCdt , PARTICLES] = remin_POM ( dCdt , POM_prodn , PARTICLES , paramet
     POM_remin=bgc_pars.POM_matrix(:,ocn_pars.Ib)*POM_prodn;
 
     % add remin to dCdt
-    dCdt(:,i_remin) = dCdt(:,i_remin) + POM_remin * bgc_pars.stoichiometry;
-    
+    dCdt(:,i_remin) = dCdt(:,i_remin) + POM_remin .* bgc_pars.stoichiometry;
+
+    % get flux hitting seafloor
+    benthic_remin=(1-accumarray(ocn_pars.wc,POM_remin.*ocn_pars.M).*ocn_pars.rM(ocn_pars.Ib));
+    benthic_remin=benthic_remin.*ocn_pars.M(ocn_pars.Ib).*ocn_pars.rM(ocn_pars.Iben);
+
+    % reflective boundary at seafloor
+    if bgc_pars.Fe_cycle
+        benthic_flux(:,I.TDFe)=0; % except for particulate-bound Fe
+    end
+    dCdt(:,i_remin) = dCdt(:,i_remin) + benthic_remin .* bgc_pars.stoichiometry;
+
     % Add to particle export matrix
     PARTICLES(:,I.POM) = POM_remin;
+    
 end
 
 %%
@@ -200,7 +212,7 @@ for n=1:max(ocn_pars.wc)
 
         remin=-diff(flux);
         remin(1:production_max_k)=0.0;
-        remin(k_btm)=remin(k_btm)+(1-sum(remin(production_max_k:k_btm)));
+        %remin(k_btm)=remin(k_btm)+(1-sum(remin(production_max_k:k_btm)));
 
     end
 
@@ -569,6 +581,23 @@ function [ scav_Fe ] = scavenge_Fe ( Fe , parameters , POC )
     % cap at maximum available Fe
     ind=scav_Fe>Fe;
     scav_Fe(ind)=Fe(ind);
+
+end
+
+
+function [ Fe_to_P ] = calc_variable_Fe_to_P ( TRACERS , parameters )
+
+    % note, C:FE max is pre-set
+
+    ind=TRACERS(:,parameters.ind_pars.TDFe)>0.125e-9;
+
+    Fe_to_C=parameters.bgc_pars.stoichiometry(:,parameters.ind_pars.TDFe);
+    Fe_to_C(ind) = min([Fe_to_C(ind),...
+        (parameters.bgc_pars.FetoC_C + parameters.bgc_pars.FetoC_K .* ...
+        (1e9.*TRACERS(:,parameters.ind_pars.TDFe) .^ parameters.bgc_pars.FetoC_pP))],[],2);
+    Fe_to_C=1./Fe_to_C;
+
+    Fe_to_P=Fe_to_C.*parameters.bgc_pars.C_to_P;
 
 end
 

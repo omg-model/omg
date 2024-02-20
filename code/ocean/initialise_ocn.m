@@ -133,6 +133,11 @@ for ii=1:numel(ocn_pars.lon)
     end
 end
 
+% get benthic grid cells
+for n=1:max(ocn_pars.wc)
+    ocn_pars.Iben(n,1)=find(ocn_pars.wc==n,1,'last');
+end
+
 
 %% Forcing data
 ocn_pars.z0                = ocn_pars.zt_edges(2);                               % bottom of surface layer (m)

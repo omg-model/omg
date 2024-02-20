@@ -19,16 +19,20 @@ bgc_pars.CaCO3_matrix = CaCO3_matrix;
 
 % stoichiometry - JDW: move this to tracer definitions as defines
 % relationships between tracers?
-bgc_pars.stoichiometry = zeros(1,gen_pars.n_bgc_tracers);
+bgc_pars.stoichiometry = zeros(ocn_pars.nb,gen_pars.n_bgc_tracers);
 
-bgc_pars.stoichiometry(1,I.PO4)=1.0;
-bgc_pars.stoichiometry(1,I.DOP)=0.0;
+bgc_pars.stoichiometry(:,I.PO4)=1.0;
+bgc_pars.stoichiometry(:,I.DOP)=0.0;
 if(bgc_pars.CARBCHEM_select)
-    bgc_pars.stoichiometry(1,I.DIC)=bgc_pars.C_to_P;
-    bgc_pars.stoichiometry(1,I.ALK)=bgc_pars.ALK_to_P;
+    bgc_pars.stoichiometry(:,I.DIC)=bgc_pars.C_to_P;
+    bgc_pars.stoichiometry(:,I.ALK)=bgc_pars.ALK_to_P;
 end
 if(bgc_pars.O2_select)
-    bgc_pars.stoichiometry(1,I.O2)=bgc_pars.O_to_P;
+    bgc_pars.stoichiometry(:,I.O2)=bgc_pars.O_to_P;
+end
+if(bgc_pars.Fe_cycle)
+    bgc_pars.stoichiometry(:,I.TDFe)=bgc_pars.C_to_Fe;
+    bgc_pars.stoichiometry(:,I.TL)=0;
 end
 
 
