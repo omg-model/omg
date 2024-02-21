@@ -142,6 +142,8 @@ function [dCdt , PARTICLES] = remin_POM ( dCdt , POM_prodn , PARTICLES , paramet
     end
     POM_remin(ocn_pars.Iben,:) = POM_remin(ocn_pars.Iben,:) + benthic_remin;
 
+    % Add to particle export matrix
+    PARTICLES = POM_remin;
     % map to tracers array
     POM_remin=POM_remin * bgc_pars.mapOCN_POM';
     % adjust tracers for organic matter stoichiometry
@@ -149,8 +151,7 @@ function [dCdt , PARTICLES] = remin_POM ( dCdt , POM_prodn , PARTICLES , paramet
     % apply tendencies
     dCdt = dCdt + POM_remin;
 
-    % Add to particle export matrix
-    PARTICLES = POM_remin;
+
 
     %dCdt(:,i_remin) = dCdt(:,i_remin) + benthic_remin .* bgc_pars.stoichiometry;
 
@@ -196,7 +197,7 @@ if parameters.bgc_pars.CARBCHEM_select
     rainratio=bgc_pars.PIC_POC.*rainratio_exponent;
     
     % Calculate CaCO3 Production from POM production and rain ratio
-    CaCO3_prodn = POM_prodn.*bgc_pars.C_to_P.*rainratio;
+    CaCO3_prodn = POM_prodn(:,I.POC).*rainratio;
     
     % DIC and ALK uptake from CaCO3 production
     dCdt(Ib,I.DIC) = dCdt(Ib,I.DIC) - CaCO3_prodn;
