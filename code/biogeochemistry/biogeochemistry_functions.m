@@ -131,39 +131,48 @@ function [dCdt , PARTICLES] = remin_POM ( dCdt , POM_prodn , PARTICLES , paramet
     POM_remin=bgc_pars.POM_matrix(:,ocn_pars.Ib)*POM_prodn;
     
     % get flux hitting seafloor
-    POM_total_export = sum(POM_prodn.*ocn_pars.M(ocn_pars.Ib)); % mol
+    POM_total_export = POM_prodn.*ocn_pars.M(ocn_pars.Ib); % mol
     for n=1:size(POM_remin,2)
-        benthic_remin(:,n)=(POM_total_export(n)-accumarray(ocn_pars.wc,POM_remin(:,n).*ocn_pars.M)).*ocn_pars.rM(ocn_pars.Iben);
+        benthic_remin(:,n)=(POM_total_export(:,n)-accumarray(ocn_pars.wc,POM_remin(:,n).*ocn_pars.M)).*ocn_pars.rM(ocn_pars.Iben);
     end
     
     % reflective boundary at seafloor
     if bgc_pars.Fe_cycle
         benthic_flux(:,I.POFe)=0; % except for particulate-bound Fe
     end
-    POM_remin(ocn_pars.Iben) = POM_remin(ocn_pars.Iben) + benthic_remin;
+    POM_remin(ocn_pars.Iben,:) = POM_remin(ocn_pars.Iben,:) + benthic_remin;
 
-    % 
-    dCdt(:,i_remin) = dCdt(:,i_remin) + benthic_remin .* bgc_pars.stoichiometry;
-
-
-
-
-
-    % add remin to dCdt
-    %dCdt(:,i_remin) = dCdt(:,i_remin) + POM_remin .* bgc_pars.stoichiometry;
-
-    % get flux hitting seafloor
-    benthic_remin=(1-accumarray(ocn_pars.wc,POM_remin.*ocn_pars.M).*ocn_pars.rM(ocn_pars.Ib));
-    benthic_remin=benthic_remin.*ocn_pars.M(ocn_pars.Ib).*ocn_pars.rM(ocn_pars.Iben);
-
-    % reflective boundary at seafloor
-    if bgc_pars.Fe_cycle
-        benthic_flux(:,I.TDFe)=0; % except for particulate-bound Fe
-    end
-    dCdt(:,i_remin) = dCdt(:,i_remin) + benthic_remin .* bgc_pars.stoichiometry;
+    % map to tracers array
+    POM_remin=POM_remin * bgc_pars.mapOCN_POM';
+    % adjust tracers for organic matter stoichiometry
+    POM_remin=POM_remin+POM_remin(:,I.PO4).*bgc_pars.remin_stoichiometry;
+    % apply tendencies
+    dCdt = dCdt + POM_remin;
 
     % Add to particle export matrix
-    PARTICLES(:,I.POM) = POM_remin;
+    PARTICLES = POM_remin;
+
+    %dCdt(:,i_remin) = dCdt(:,i_remin) + benthic_remin .* bgc_pars.stoichiometry;
+
+
+
+
+
+%     % add remin to dCdt
+%     %dCdt(:,i_remin) = dCdt(:,i_remin) + POM_remin .* bgc_pars.stoichiometry;
+% 
+%     % get flux hitting seafloor
+%     benthic_remin=(1-accumarray(ocn_pars.wc,POM_remin.*ocn_pars.M).*ocn_pars.rM(ocn_pars.Ib));
+%     benthic_remin=benthic_remin.*ocn_pars.M(ocn_pars.Ib).*ocn_pars.rM(ocn_pars.Iben);
+% 
+%     % reflective boundary at seafloor
+%     if bgc_pars.Fe_cycle
+%         benthic_flux(:,I.TDFe)=0; % except for particulate-bound Fe
+%     end
+%     dCdt(:,i_remin) = dCdt(:,i_remin) + benthic_remin .* bgc_pars.stoichiometry;
+% 
+%     % Add to particle export matrix
+%     PARTICLES(:,I.POM) = POM_remin;
     
 end
 
