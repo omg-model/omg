@@ -26,7 +26,7 @@ bgc_pars.uptake_stoichiometry(:,I.DOP)=0.0;
 if(bgc_pars.CARBCHEM_select)
     bgc_pars.uptake_stoichiometry(:,I.DIC)=bgc_pars.C_to_P;
     bgc_pars.uptake_stoichiometry(:,I.ALK)=bgc_pars.ALK_to_P;
-    bgc_pars.uptake_stoichiometry(:,I.DOC)=-bgc_pars.C_to_P;
+    %bgc_pars.uptake_stoichiometry(:,I.DOC)=-bgc_pars.C_to_P;
 end
 if(bgc_pars.O2_select)
     bgc_pars.uptake_stoichiometry(:,I.O2)=bgc_pars.O_to_P;
