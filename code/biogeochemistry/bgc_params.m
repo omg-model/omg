@@ -122,3 +122,4 @@ bgc_pars.DIC_init=2244/1e6;
 bgc_pars.ALK_init=2363/1e6;
 bgc_pars.pCO2_init=278/1e6;
 bgc_pars.pO2_init=0.2095;
+bgc_pars.DOC_init=0.0235*106/1e6; 

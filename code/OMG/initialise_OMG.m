@@ -125,6 +125,8 @@ elseif strcmp(parameters.gen_pars.integrate_scheme,'newton')
 
 elseif strcmp(parameters.gen_pars.integrate_scheme,'newton_krylov')
 
+elseif strcmp(parameters.gen_pars.integrate_scheme,'anderson')
+
 else
 
     error([parameters.gen_pars.integrate_scheme ' is not a valid solver.\n%s'],...

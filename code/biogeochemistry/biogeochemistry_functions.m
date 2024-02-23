@@ -101,6 +101,7 @@ function [dCdt] = remin_DOM(TRACERS , dCdt , parameters)
     % first calculate remineralisation for *everything*, then map remin of DOM
     % tracers back to normal tracers
     remin = TRACERS .* bgc_pars.DOP_k * bgc_pars.mapOCN_DOM';
+    remin(remin<0)=0.0;
     
     % add effects of organic matter remineralisation stoichiometry
     remin = remin + remin(:,I.PO4) .* bgc_pars.remin_stoichiometry; 

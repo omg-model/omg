@@ -20,6 +20,8 @@ switch parameters.gen_pars.integrate_scheme
         [TRACERS,ATM]=functions.OMG_fcns.solve_newton(TRACERS,ATM,OCEAN,ECC,parameters,functions,forcings,bioinf,false);
     case('newton_krylov')
         [TRACERS,ATM]=functions.OMG_fcns.solve_newton_krylov(TRACERS,ATM,OCEAN,ECC,parameters,functions,forcings,bioinf,false);
+    case('anderson')
+        [TRACERS,ATM]=functions.OMG_fcns.solve_anderson(TRACERS,ATM,OCEAN,ECC,parameters,functions,forcings,bioinf,false);
 end
 
 %%

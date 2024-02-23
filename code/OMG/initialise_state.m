@@ -84,6 +84,7 @@ else % no restart selected, start from initial conditions
     if bgc_pars.CARBCHEM_select
         TRACERS(:,I.DIC)=bgc_pars.DIC_init;
         TRACERS(:,I.ALK)=bgc_pars.ALK_init;
+        TRACERS(:,I.DOC)=bgc_pars.DOC_init;
         ATM(I.pCO2)=bgc_pars.pCO2_init;
         CARBCHEM(:,I.H)=10e-8; % JDW: remove?
     end
