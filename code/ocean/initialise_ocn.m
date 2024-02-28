@@ -104,6 +104,8 @@ ocn_pars.V = diff(ocn_pars.zt_edges).*ocn_pars.A;
 % broadcast 1D variables to global vector
 ocn_pars.V = ocn_pars.V(ocn_pars.rk); 
 ocn_pars.depth  = ocn_pars.depth(ocn_pars.rk); 
+ocn_pars.grid_depth = diff(ocn_pars.zt_edges); 
+ocn_pars.grid_depth = ocn_pars.grid_depth(ocn_pars.rk);
 
 % calculate mass using volume loaded from fields_biogem_3d.nc
 ocn_pars.M  = 1027.649.*ocn_pars.V;

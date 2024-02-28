@@ -10,6 +10,8 @@ else
     bgc_pars.DOP_k=0;
 end
 
+bgc_pars.K_FeL=10.^bgc_pars.K_FeL_pP; 
+
 % calculate POM remineralisation matrix if needed
 if strcmp(bgc_pars.remin_scheme,'matrix')
     [POM_matrix , CaCO3_matrix]=bgc_fcns.create_remin_matrices(bgc_pars,ocn_pars);
@@ -94,6 +96,39 @@ OCEAN.PO4_obs = zeros(ocn_pars.nb,ocn_pars.n_A);                                
 
 % JDW - converting to model units of day-1
 bgc_pars.u0PO4=bgc_pars.u0PO4/360;
+
+% make water column cumulative sum matrix
+count=1; 
+tmp=0;
+for n=1:934
+    tmp=tmp+numel(find(ocn_pars.wc==n))^2;
+end
+
+spcol_ind=zeros(tmp,1);
+sprow_ind=zeros(tmp,1);
+spval=zeros(tmp,1);
+
+
+for wc=1:ocn_pars.nb
+    n_wc=numel(find(ocn_pars.wc==wc));
+    wc_start=find(ocn_pars.wc==wc,1,'first');
+    wc_end=find(ocn_pars.wc==wc,1,'last');
+    %tmp_row=reshape(triu(ones(n_wc,n_wc)),[],1);
+    tmp_row=reshape(triu(repmat(find(ocn_pars.wc==wc),1,n_wc)),[],1);
+    tmp_col=reshape(repmat([wc_start:1:wc_end],n_wc,1),[],1);
+    spcol_ind(count:count+numel(tmp_col)-1,1)=tmp_col;
+    sprow_ind(count:count+numel(tmp_row)-1,1)=tmp_row;
+    count=count+numel(tmp_row);
+end
+
+ind=sprow_ind==0;
+sprow_ind(ind)=[];
+spcol_ind(ind)=[];
+
+ocn_pars.wc_cumsum=sparse(spcol_ind,sprow_ind,ones(size(sprow_ind,1),1),ocn_pars.nb,ocn_pars.nb);
+
+% make water column sum matrix
+ocn_pars.wc_sum=sparse(ocn_pars.wc,[1:1:ocn_pars.nb],ones(ocn_pars.nb,1),ocn_pars.nb,ocn_pars.nb);
 
 
 %% Load forcing data

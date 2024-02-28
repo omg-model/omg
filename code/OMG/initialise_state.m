@@ -88,6 +88,10 @@ else % no restart selected, start from initial conditions
         ATM(I.pCO2)=bgc_pars.pCO2_init;
         CARBCHEM(:,I.H)=10e-8; % JDW: remove?
     end
+    if bgc_pars.Fe_cycle
+        TRACERS(:,I.TDFe)=bgc_pars.TDFe_init;
+        TRACERS(:,I.TL)=bgc_pars.TL_init;
+    end
     if strcmp(bgc_pars.uptake_scheme,'eco')
         TRACERS(ocn_pars.Ib,I.PHY)=eco_pars.PHY_init;                            % initial plankton concentrations
         if isempty(eco_pars.seed_val)

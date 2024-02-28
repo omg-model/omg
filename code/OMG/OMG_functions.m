@@ -98,6 +98,9 @@ function [ dCdt_out , diagnostics , bioinf] = dOMGdt ( t , y , OCEAN , ECC , par
         % Implicitly remineralise CaCO3 
         [dCdt,PARTICLES] = functions.bgc_fcns.remin_CaCO3(dCdt , POM_prodn , ECC , PARTICLES , parameters); 
 
+        % Scavenging
+        [ dCdt ] = functions.bgc_fcns.scavenging (dCdt , TRACERS , parameters , PARTICLES );
+
         % Air-sea gas exchange
         [ dCdt , dATMdt ] = functions.bgc_fcns.airsea_gas_exchange ( dCdt , dATMdt , TRACERS , ATM , ECC , parameters );
 
@@ -313,7 +316,7 @@ function [ TRACERS, ATM ] = solve_newton_krylov (TRACERS,ATM,OCEAN,ECC,parameter
 
     % create state vector
     xinit = [reshape(TRACERS,[],1) ; ATM'];
-    parameters.gen_pars.left_precond=false; 
+    parameters.gen_pars.left_precond=true; 
     parameters.gen_pars.update_precond=false;
     pars_in={TRACERS,ATM,OCEAN,ECC,parameters,functions,forcings,bioinf,diags_on};
 
@@ -369,8 +372,8 @@ function [ TRACERS, ATM ] = solve_anderson (TRACERS,ATM,OCEAN,ECC,parameters,fun
     % call AndAcc solver
     mMax = min(50, size(xinit,1)); 
     itmax = 500; 
-    atol = 1.e-8; 
-    rtol = 1.e-8; 
+    atol = 1.e-9; 
+    rtol = 1.e-9; 
     droptol = 1.e10; 
     beta = 1;
     AAstart = 0; 

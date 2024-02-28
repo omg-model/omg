@@ -1529,7 +1529,7 @@ function [ gen_pars , eco_pars , I ] = setup_array_indices ( gen_pars , bgc_pars
     gen_pars.n_particles=1; 
     
     I.SED_Indices = '------------------------------------------------';
-    I.POM=1;
+    I.POP=1;
     SED_names={'POP'};
     SED_long_names={'Particulate Organic Phosphorus'};
     SED_units={'mol kg-1'};
@@ -1557,7 +1557,7 @@ function [ gen_pars , eco_pars , I ] = setup_array_indices ( gen_pars , bgc_pars
         SED_units{gen_pars.n_particles}='mol kg-1';
 
         gen_pars.n_particles=gen_pars.n_particles+1;    % PFe
-        I.PFe=gen_pars.n_particles;
+        I.POFe=gen_pars.n_particles;
         SED_names{gen_pars.n_particles}='POFe';
         SED_long_names{gen_pars.n_particles}='Particulate Iron';
         SED_units{gen_pars.n_particles}='mol kg-1';

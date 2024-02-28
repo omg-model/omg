@@ -15,7 +15,7 @@ function [ bgc_fcns ] = biogeochemistry_functions ( )
     bgc_fcns.initialise_gasex_constants=@initialise_gasex_constants;
     bgc_fcns.aeolian_Fe=@aeolian_Fe;
     bgc_fcns.Fe_speciation=@Fe_speciation;
-    bgc_fcns.scavenge_Fe=@scavenge_Fe;
+    bgc_fcns.scavenging=@scavenging;
     bgc_fcns.calc_variable_Fe_to_P=@calc_variable_Fe_to_P;
 
 end
@@ -131,11 +131,22 @@ function [dCdt , PARTICLES] = remin_POM ( dCdt , POM_prodn , PARTICLES , paramet
     % Take POM production from the surface layer and redistribute across water column
     POM_remin=bgc_pars.POM_matrix(:,ocn_pars.Ib)*POM_prodn;
     
-    % get flux hitting seafloor
+    % get total POC export from surface
     POM_total_export = POM_prodn.*ocn_pars.M(ocn_pars.Ib); % mol
-    for n=1:size(POM_remin,2)
-        benthic_remin(:,n)=(POM_total_export(:,n)-accumarray(ocn_pars.wc,POM_remin(:,n).*ocn_pars.M)).*ocn_pars.rM(ocn_pars.Iben);
-    end
+    % calculate particle concentration in water column (mol kg-1 day-1)
+    PARTICLES(ocn_pars.Ib,:) = POM_total_export;
+    PARTICLES(ocn_pars.Ii,:) = -POM_remin(ocn_pars.Ii,:).*ocn_pars.M(ocn_pars.Ii);
+
+    %for n=1:size(POM_remin,2)
+    %    PARTICLES(:,n)=cell2mat(accumarray(parameters.ocn_pars.wc,PARTICLES(:,n),[],@(x){cumsum(x)})) .* ocn_pars.rM;
+    %end
+    PARTICLES=ocn_pars.wc_cumsum*PARTICLES.*ocn_pars.rM;
+    % get flux hitting seafloor
+    % for n=1:size(POM_remin,2)
+    %     benthic_remin(:,n)=(POM_total_export(:,n)-accumarray(ocn_pars.wc,POM_remin(:,n).*ocn_pars.M)).*ocn_pars.rM(ocn_pars.Iben);
+    % end
+    benthic_remin=ocn_pars.wc_sum*(POM_remin.*ocn_pars.M);
+    benthic_remin=(POM_total_export-benthic_remin(1:numel(ocn_pars.Ib),:)).*ocn_pars.rM(ocn_pars.Iben);
     
     % reflective boundary at seafloor
     if bgc_pars.Fe_cycle
@@ -143,8 +154,6 @@ function [dCdt , PARTICLES] = remin_POM ( dCdt , POM_prodn , PARTICLES , paramet
     end
     POM_remin(ocn_pars.Iben,:) = POM_remin(ocn_pars.Iben,:) + benthic_remin;
 
-    % Add to particle export matrix
-    PARTICLES = POM_remin;
     % map to tracers array
     POM_remin=POM_remin * bgc_pars.mapOCN_POM';
     % adjust tracers for organic matter stoichiometry
@@ -597,15 +606,25 @@ function [ dCdt ] = aeolian_Fe ( dCdt , PARTICLES , parameters )
 
 end
 
-function [ Fe , FeL , L ] = Fe_speciation ( TDFe , TL , K_FeL )
+function [ Fe , FeL , L ] = Fe_speciation ( TRACERS , parameters )
 
-    p = [ 1 , -(TL+TDFe+1/K_FeL) , TDFe*TL ];
-    r = roots(p);
+    TDFe = TRACERS(:,parameters.ind_pars.TDFe);
+    TL = TRACERS(:,parameters.ind_pars.TL);
+    K_FeL = parameters.bgc_pars.K_FeL;
 
+    p = [ ones(parameters.ocn_pars.nb,1) , -(TL+TDFe+1/K_FeL) , TDFe.*TL ];
+    r=ones(parameters.ocn_pars.nb,2);
+    % for n=1:size(p,1)
+    %     r(n,:) = roots(p(n,:))';
+    % end
+    r(:,1)=-p(:,2)+sqrt(p(:,2).^2 - 4.*p(:,1).*p(:,3))./(2.*p(:,1));
+    r(:,2)=-p(:,2)-sqrt(p(:,2).^2 - 4.*p(:,1).*p(:,3))./(2.*p(:,1));
+    
+    % replace with tmp=min(r,[],2); tmp(tmp<1e-15)=max... 
     if min(r)<1e-15
-        FeL=max(r);
+        FeL=max(r,[],2);
     else
-        FeL=min(r);
+        FeL=min(r,[],2);
     end
 
     Fe = TDFe - FeL;
@@ -614,22 +633,43 @@ function [ Fe , FeL , L ] = Fe_speciation ( TDFe , TL , K_FeL )
 end
 
 
-function [ scav_Fe ] = scavenge_Fe ( Fe , parameters , POC )
+function [ dCdt ] = scavenging (dCdt , TRACERS , parameters , PARTICLES )
 
-    % convert particle concentration from mol kg-1 to mg l-1
-    Cp = POC * 1e6 * 12.01 * (1000/1027.649);
+    if parameters.bgc_pars.Fe_cycle
 
-    % scavenging rate (d-1)
-    scav_Fe_k = parameters.bgc_pars.scav_Fe_sf_POC ...
-        * parameters.bgc_pars.scav_Fe_k0 ...
-        (Cp.^parameters.bgc_pars.scav_Fe_exp);
+        % get Fe conc. from Total Dissovled Fe and Total Ligands
+        [ Fe ] = Fe_speciation ( TRACERS , parameters );
+
+        % convert particle concentration from mol kg-1 d-1 to mg l-1 d-1
+        if parameters.bgc_pars.CARBCHEM_select
+            POC = PARTICLES(:,parameters.ind_pars.POC);
+        else
+            POC = PARTICLES(:,parameters.ind_pars.POP).*parameters.bgc_pars.C_to_P;
+        end
+        
+        % -> conc via residence time = depth layer (m) and sinking rate (m day-1)
+        POC = POC .* (parameters.ocn_pars.grid_depth ./ 125); 
+        
+        % convert particle concentration from mol kg-1 to mg l-1
+        Cp = POC * 1e6 * 12.01 * (1000/1027.649);
     
-    % scavenged Fe (mol kg-1 d-1)
-    scav_Fe = scav_Fe_k .* Fe;
+        % scavenging rate (d-1)
+        scav_Fe_k = parameters.bgc_pars.scav_Fe_sf_POC ...
+            * parameters.bgc_pars.scav_Fe_k0 ...
+            * (Cp.^parameters.bgc_pars.scav_Fe_exp);
+        
+        % scavenged Fe (mol kg-1 d-1)
+        scav_Fe = scav_Fe_k .* Fe;
+    
+        % cap at maximum available Fe
+        ind=scav_Fe>Fe;
+        scav_Fe(ind)=Fe(ind);
 
-    % cap at maximum available Fe
-    ind=scav_Fe>Fe;
-    scav_Fe(ind)=Fe(ind);
+        % adjust tendencies
+        % n.b. scavenged iron is just lost from the system
+        dCdt(:,parameters.ind_pars.TDFe) = dCdt(:,parameters.ind_pars.TDFe) - scav_Fe;
+
+    end
 
 end
 
@@ -639,12 +679,12 @@ function [ Fe_to_P ] = calc_variable_Fe_to_P ( TRACERS , parameters )
     % note, C:FE max is pre-set
 
     Ib=parameters.ocn_pars.Ib;
-    ind=TRACERS(Ib,parameters.ind_pars.TDFe)>0.125e-9;
+    ind=TRACERS(:,parameters.ind_pars.TDFe)>0.125e-9;
 
-    Fe_to_C=parameters.bgc_pars.stoichiometry(Ib,parameters.ind_pars.TDFe);
+    Fe_to_C=parameters.bgc_pars.uptake_stoichiometry(Ib,parameters.ind_pars.TDFe);
     Fe_to_C(ind) = min([Fe_to_C(ind),...
         (parameters.bgc_pars.FetoC_C + parameters.bgc_pars.FetoC_K .* ...
-        (1e9.*TRACERS(Ib,parameters.ind_pars.TDFe) .^ parameters.bgc_pars.FetoC_pP))],[],2);
+        (1e9.*TRACERS(ind,parameters.ind_pars.TDFe) .^ parameters.bgc_pars.FetoC_pP))],[],2);
     Fe_to_C=1./Fe_to_C;
 
     Fe_to_P=Fe_to_C.*parameters.bgc_pars.C_to_P;
