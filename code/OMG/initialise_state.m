@@ -91,6 +91,7 @@ else % no restart selected, start from initial conditions
     if bgc_pars.Fe_cycle
         TRACERS(:,I.TDFe)=bgc_pars.TDFe_init;
         TRACERS(:,I.TL)=bgc_pars.TL_init;
+        TRACERS(:,I.DOFe)=bgc_pars.DOFe_init;
     end
     if strcmp(bgc_pars.uptake_scheme,'eco')
         TRACERS(ocn_pars.Ib,I.PHY)=eco_pars.PHY_init;                            % initial plankton concentrations

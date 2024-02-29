@@ -2113,7 +2113,7 @@ function [ forcings ] = load_forcing_data(gen_pars,bgc_pars,forcings,I,ocn_pars)
 
 
                     % surface explicit
-                    if forcings.ocn.meta(n,4)
+                    if forcings.ocn.meta(n,4) & strcmp(var_name,force_name)
                         tmp=flipud(load(strcat(dir_loc,force_name,'.sur')));
                         tmp2=zeros(max(ocn_pars.k),36,36); tmp2(1,:,:)=tmp;
                         forcings.ocn.data(:,n)=f2v(tmp2,ocn_pars.i,ocn_pars.j,ocn_pars.rk);
@@ -2169,7 +2169,7 @@ function [ forcings ] = load_forcing_data(gen_pars,bgc_pars,forcings,I,ocn_pars)
 
 
                     % surface explicit
-                    if forcings.sed.meta(n,4)
+                    if forcings.sed.meta(n,4) & strcmp(var_name,force_name)
                         tmp=flipud(load(strcat(dir_loc,force_name,'.sur')));
                         tmp2=zeros(max(ocn_pars.k),36,36); tmp2(1,:,:)=tmp;
                         forcings.sed.data(:,n)=f2v(tmp2,ocn_pars.i,ocn_pars.j,ocn_pars.rk);

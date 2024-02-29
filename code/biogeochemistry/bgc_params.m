@@ -125,3 +125,4 @@ bgc_pars.pO2_init=0.2095;
 bgc_pars.DOC_init=0.0235*106/1e6; 
 bgc_pars.TDFe_init=0.650E-09;
 bgc_pars.TL_init=1.000E-09;
+bgc_pars.DOFe_init=1.00E-11;
