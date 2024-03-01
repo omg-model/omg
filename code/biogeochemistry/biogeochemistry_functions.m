@@ -33,6 +33,11 @@ function [dCdt,POM_prodn] = SurfaceProd(dCdt , SURFACE , parameters)
         
     solfor=parameters.ocn_pars.solfor(Ib);    
     seaice=parameters.ocn_pars.seaice(Ib);
+
+    % calculate variable Fe:C as f(TDFe)
+    if bgc_pars.Fe_cycle
+        bgc_pars.uptake_stoichiometry(Ib,I.TDFe)=calc_variable_Fe_to_P( SURFACE , parameters );
+    end
     
     % calculate uptake of PO4
     switch bgc_pars.uptake_scheme
@@ -43,7 +48,8 @@ function [dCdt,POM_prodn] = SurfaceProd(dCdt , SURFACE , parameters)
             % van de Velde et al., (2021) GMD
             FT=bgc_pars.bio_kT0.*exp(parameters.ocn_pars.T(Ib)./bgc_pars.bio_keT);
             FN=min([SURFACE(:,I.PO4)./(SURFACE(:,I.PO4)+bgc_pars.KPO4),SURFACE(:,I.TDFe)./(SURFACE(:,I.TDFe)+bgc_pars.KFe)],[],2);
-            Nmin=min([SURFACE(:,I.PO4),bgc_pars.C_to_P.*SURFACE(:,I.TDFe)./bgc_pars.C_to_Fe],[],2);
+            %Nmin=min([SURFACE(:,I.PO4),bgc_pars.C_to_P.*SURFACE(:,I.TDFe)./bgc_pars.C_to_Fe],[],2);
+            Nmin=min([SURFACE(:,I.PO4),SURFACE(:,I.TDFe)./bgc_pars.uptake_stoichiometry(Ib,I.TDFe)],[],2);
             uptake=solfor.*seaice.*FT.*FN.*Nmin./bgc_pars.bio_tau;
         case 'restore'
              error('Restore scheme broken by Ben! Need to add PO4_obs to parameter structure.')
@@ -53,11 +59,6 @@ function [dCdt,POM_prodn] = SurfaceProd(dCdt , SURFACE , parameters)
             uptake=0.0;
         otherwise
             error('No PO4 uptake routine selected')
-    end
-
-    % calculate variable Fe:C as f(TDFe)
-    if bgc_pars.Fe_cycle
-        bgc_pars.uptake_stoichiometry(Ib,I.TDFe)=calc_variable_Fe_to_P( SURFACE , parameters );
     end
     
     uptake=uptake.*bgc_pars.uptake_stoichiometry(Ib,:);
@@ -610,6 +611,7 @@ function [ Fe , FeL , L ] = Fe_speciation ( TRACERS , parameters )
 
     TDFe = TRACERS(:,parameters.ind_pars.TDFe);
     TL = TRACERS(:,parameters.ind_pars.TL);
+    %TL = ones(parameters.ocn_pars.nb,1)*1e-9;
     K_FeL = parameters.bgc_pars.K_FeL;
 
     p = [ ones(parameters.ocn_pars.nb,1) , -(TL+TDFe+1/K_FeL) , TDFe.*TL ];

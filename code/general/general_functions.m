@@ -1018,7 +1018,7 @@ function [ OUTPUT ] = collate_output( yr , TRACERS_t , diagnostics , parameters 
             % Particles
             for j=1:gen_pars.n_particles
                 Data_name = I.SED_names{j};
-                Data      = mean(PARTICLES_t(:,j,i_int),3,'omitnan');
+                Data      = sum(PARTICLES_t(:,j,i_int)*parameters.gen_pars.dt*parameters.gen_pars.dt_ratio,3,'omitnan'); % n.b. comes in as mol kg-1 day-1 so integrate with bgc timestep
                 % Time Slices
                 if write_timeslices
                     F = getfield(OUTPUT.TimeSlice ,Data_name);                   % Extract TimeSlice Fields from OUTPUT structure

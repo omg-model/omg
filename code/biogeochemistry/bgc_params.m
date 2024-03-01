@@ -38,7 +38,7 @@ bgc_pars.CaCO3_eL2              = 1000000.0;
 
 bgc_pars.det_Fe_sol             = 0.002014275;                             % aeolian Fe solubility
 bgc_pars.det_Fe_sol_exp         = 0.500;                                   % aeolian Fe solubility exponent (use 1.0 for uniform solubility)
-bgc_pars.scav_Fe_sf_POC         = 0.344104;                                % modifier of scavenging rate of dissolved Fe
+bgc_pars.scav_Fe_sf_POC         = 1.338130;                                % modifier of scavenging rate of dissolved Fe
 bgc_pars.scav_Fe_sf_CaCO3       = 0.0;                                     % modifier of scavenging rate of dissolved Fe
 bgc_pars.scav_fremin            = 0.0;                                     % scavenged regeneration
 bgc_pars.scav_Fe_k0             = 0.079;                                   % initial scavenging rate (d-1; Parekh et al., 2005)
