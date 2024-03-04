@@ -34,7 +34,7 @@ if(bgc_pars.O2_select)
     bgc_pars.uptake_stoichiometry(:,I.O2)=bgc_pars.O_to_P;
 end
 if(bgc_pars.Fe_cycle)
-    bgc_pars.uptake_stoichiometry(:,I.TDFe)=bgc_pars.C_to_Fe;
+    bgc_pars.uptake_stoichiometry(:,I.TDFe)=bgc_pars.Fe_to_C; % n.b. will be converted to Fe_to_P
     bgc_pars.uptake_stoichiometry(:,I.TL)=0;
 end
 

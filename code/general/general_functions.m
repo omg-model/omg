@@ -2117,6 +2117,11 @@ function [ forcings ] = load_forcing_data(gen_pars,bgc_pars,forcings,I,ocn_pars)
                         tmp=flipud(load(strcat(dir_loc,force_name,'.sur')));
                         tmp2=zeros(max(ocn_pars.k),36,36); tmp2(1,:,:)=tmp;
                         forcings.ocn.data(:,n)=f2v(tmp2,ocn_pars.i,ocn_pars.j,ocn_pars.rk);
+                        if forcings.ocn.meta(n,1)
+                            % catch case of restoring to zero!
+                            ind=forcings.ocn.data(:,n)==0;
+                            forcings.ocn.data(ind,n)=NaN;
+                        end
                         %forcings.ocn.data(:,n)=forcings.ocn.data(:,n)./sum(forcings.ocn.data(:,n)); % re-scale so force_val is applied evenly
                     end
 

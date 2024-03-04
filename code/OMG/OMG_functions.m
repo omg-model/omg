@@ -37,7 +37,7 @@ function [ dCdt_out , diagnostics , bioinf] = dOMGdt ( t , y , OCEAN , ECC , par
     % initialise dXdt arrays
     dCdt      = TRACERS.*0;
     dATMdt    = zeros(1,gen_pars.n_atm);
-    PARTICLES = nan(ocn_pars.nb,gen_pars.n_particles);
+    PARTICLES = zeros(ocn_pars.nb,gen_pars.n_particles);
     
     % get time as day-of-year
     tcyc = rem(t,360);

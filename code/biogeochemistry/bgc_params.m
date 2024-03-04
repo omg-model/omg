@@ -57,7 +57,7 @@ bgc_pars.C_to_P                 = 106.0;                                   % Sto
 bgc_pars.N_to_P                 = 16.0;                                    % Stoichiometric ratio of N:P 
 bgc_pars.O_to_P                 = -170.0;                                  % Stoichiometric ratio of O:P 
 bgc_pars.ALK_to_P               = -16.0;                                   % Stoichiometric ratio of alkalinity:P (-N:P)
-bgc_pars.C_to_Fe                = 250000.0;                                % C/Fe organic matter ratio (max if Fe:C is variable)
+bgc_pars.Fe_to_C                = 250000.0;                                % max Fe:C organic matter ratio for variable Fe:C
 
 bgc_pars.gastransfer_a          = 0.31;                                    % gas transfer
 
