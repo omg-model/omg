@@ -40,7 +40,7 @@ end
 
 
 %% Check matlab has correct number of workers
-p = gcp('nocreate');
+%p = gcp('nocreate');
 
 %% run initialisation scripts
 run('../general/initialise_gen.m')
