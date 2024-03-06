@@ -60,6 +60,7 @@ function [dCdt,POM_prodn] = SurfaceProd(dCdt , SURFACE , parameters)
         otherwise
             error('No PO4 uptake routine selected')
     end
+    uptake(uptake<0)=0;
     
     uptake=uptake.*bgc_pars.uptake_stoichiometry(Ib,:);
     dCdt(Ib,1:gen_pars.n_bgc_tracers) = dCdt(Ib,1:gen_pars.n_bgc_tracers)  - uptake;
