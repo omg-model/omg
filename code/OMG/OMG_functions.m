@@ -371,7 +371,7 @@ function [ TRACERS, ATM ] = solve_anderson (TRACERS,ATM,OCEAN,ECC,parameters,fun
 
     % call AndAcc solver
     mMax = min(50, size(xinit,1)); 
-    itmax = 500; 
+    itmax = 1000; 
     atol = 1.e-9; 
     rtol = 1.e-9; 
     droptol = 1.e10; 

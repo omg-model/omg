@@ -501,7 +501,8 @@ function [ dCdt ] = ocn_forcings ( t , TRACERS , dCdt , parameters , forcings)
             sig=forcings.ocn.interp{n}(t);
             %dCdt(:,n) = dCdt(:,n) + ((sig .* forcings.ocn.data(:,n) * forcings.ocn.restore_scale(1,n)) - TRACERS(:,n)) * parameters.bgc_pars.restore_timescale;
             %dCdt(:,n) = dCdt(:,n) + (((sig .* sum(forcings.ocn.restore_scale(1,n)*sum(parameters.ocn_pars.M))) - sum(TRACERS(:,n).*parameters.ocn_pars.M)) * parameters.bgc_pars.restore_timescale)*forcings.ocn.data(:,n)./parameters.ocn_pars.M;  
-            dCdt(:,n) = dCdt(:,n) + ((sig .* forcings.ocn.restore_scale(1,n)) - TRACERS(:,n)) * forcings.ocn.restore_timescale(1,n);
+            dCdt(:,n) = dCdt(:,n) + ((sig .* forcings.ocn.restore_scale(1,n) .* forcings.ocn.data(:,n)) - TRACERS(:,n)) * forcings.ocn.restore_timescale(1,n);
+            dCdt(isnan(dCdt(:,n)),n)=0;
 
         end
         % forcing (mol kg-1 day-1)
@@ -580,7 +581,7 @@ end
 
 function [ dCdt ] = aeolian_Fe ( dCdt , PARTICLES , parameters )
 
-    if parameters.bgc_pars.Fe_cycle
+    if parameters.bgc_pars.Fe_cycle & sum(PARTICLES(:,parameters.ind_pars.Det))>0
 
     I=parameters.ind_pars;
 
@@ -614,20 +615,19 @@ function [ Fe , FeL , L ] = Fe_speciation ( TRACERS , parameters )
     %TL = ones(parameters.ocn_pars.nb,1)*1e-9;
     K_FeL = parameters.bgc_pars.K_FeL;
 
-    p = [ ones(parameters.ocn_pars.nb,1) , -(TL+TDFe+1/K_FeL) , TDFe.*TL ];
-    r=ones(parameters.ocn_pars.nb,2);
-    % for n=1:size(p,1)
-    %     r(n,:) = roots(p(n,:))';
-    % end
-    r(:,1)=-p(:,2)+sqrt(p(:,2).^2 - 4.*p(:,1).*p(:,3))./(2.*p(:,1));
-    r(:,2)=-p(:,2)-sqrt(p(:,2).^2 - 4.*p(:,1).*p(:,3))./(2.*p(:,1));
+    a=ones(parameters.ocn_pars.nb,1);
+    b=-(TL+TDFe+1/K_FeL);
+    c=TDFe.*TL;
+    r=zeros(parameters.ocn_pars.nb,2);
+    r(:,1)=(-b+sqrt(b.^2 - 4.*a.*c))./(2.*a);
+    r(:,2)=(-b-sqrt(b.^2 - 4.*a.*c))./(2.*a);
     
-    % replace with tmp=min(r,[],2); tmp(tmp<1e-15)=max... 
-    if min(r)<1e-15
-        FeL=max(r,[],2);
-    else
-        FeL=min(r,[],2);
-    end
+    min_r=min(r,[],2);
+    max_r=max(r,[],2);
+    
+    FeL=min_r;
+    ind=find(min_r<9.9E-020);
+    FeL(ind)=max_r(ind);
 
     Fe = TDFe - FeL;
     L  = TL - FeL;
@@ -653,7 +653,7 @@ function [ dCdt ] = scavenging (dCdt , TRACERS , parameters , PARTICLES )
         POC = POC .* (parameters.ocn_pars.grid_depth ./ 125); 
         
         % convert particle concentration from mol kg-1 to mg l-1
-        Cp = POC * 1e6 * 12.01 * (1000/1027.649);
+        Cp = POC * 1e3 * 12.01 * (1000/1027.649);
     
         % scavenging rate (d-1)
         scav_Fe_k = parameters.bgc_pars.scav_Fe_sf_POC ...
@@ -685,8 +685,8 @@ function [ Fe_to_P ] = calc_variable_Fe_to_P ( TRACERS , parameters )
 
     Fe_to_C=parameters.bgc_pars.uptake_stoichiometry(Ib,parameters.ind_pars.TDFe);
     Fe_to_C(ind) = min([Fe_to_C(ind),...
-        (parameters.bgc_pars.FetoC_C + parameters.bgc_pars.FetoC_K .* ...
-        (1e9.*TRACERS(ind,parameters.ind_pars.TDFe) .^ parameters.bgc_pars.FetoC_pP))],[],2);
+        parameters.bgc_pars.FetoC_C + parameters.bgc_pars.FetoC_K .* ...
+        (1e9.*TRACERS(ind,parameters.ind_pars.TDFe)) .^ parameters.bgc_pars.FetoC_pP],[],2);
     Fe_to_C=1./Fe_to_C;
 
     Fe_to_P=Fe_to_C.*parameters.bgc_pars.C_to_P;
