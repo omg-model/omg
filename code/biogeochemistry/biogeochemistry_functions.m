@@ -22,7 +22,7 @@ end
 
 %%----- SUBROUTINES -----%%
 %%
-function [dCdt,POM_prodn] = SurfaceProd(dCdt , SURFACE , parameters)
+function [dCdt,PARTICLES] = SurfaceProd(dCdt , SURFACE , PARTICLES , parameters)
     % BAW changed i/o format to pass dCdt and Particle_Export (implicit particulate production)
     gen_pars=parameters.gen_pars;
     bgc_pars=parameters.bgc_pars;
@@ -65,7 +65,7 @@ function [dCdt,POM_prodn] = SurfaceProd(dCdt , SURFACE , parameters)
     uptake=uptake.*bgc_pars.uptake_stoichiometry(Ib,:);
     dCdt(Ib,1:gen_pars.n_bgc_tracers) = dCdt(Ib,1:gen_pars.n_bgc_tracers)  - uptake;
     dCdt(Ib,1:gen_pars.n_bgc_tracers) = dCdt(Ib,1:gen_pars.n_bgc_tracers)  + uptake.*bgc_pars.DOP_frac*bgc_pars.mapOCN_DOM;
-    POM_prodn = uptake.*bgc_pars.rDOP_frac*bgc_pars.mapOCN_POM; 
+    PARTICLES(Ib,:) = PARTICLES(Ib,:) + uptake.*bgc_pars.rDOP_frac*bgc_pars.mapOCN_POM; 
     
     % Calculate uptake of all BGC tracers from PO4 uptake, using bgc_pars.stoichiometry
     %dCdt(:,1:gen_pars.n_bgc_tracers) = -uptake .* bgc_pars.uptake_stoichiometry(Ib,:);
@@ -121,7 +121,7 @@ end
 
 %%
 
-function [dCdt , PARTICLES] = remin_POM ( dCdt , POM_prodn , PARTICLES , parameters )
+function [dCdt , PARTICLES] = remin_POM ( dCdt , PARTICLES , parameters )
 
     gen_pars = parameters.gen_pars;
     bgc_pars = parameters.bgc_pars;
@@ -131,13 +131,14 @@ function [dCdt , PARTICLES] = remin_POM ( dCdt , POM_prodn , PARTICLES , paramet
     i_remin=1:gen_pars.n_bgc_tracers;
 
     % Take POM production from the surface layer and redistribute across water column
-    POM_remin=bgc_pars.POM_matrix(:,ocn_pars.Ib)*POM_prodn;
+    % n.b. Det included currently
+    POM_remin=bgc_pars.POM_matrix*PARTICLES;
     
     % get total POC export from surface
-    POM_total_export = POM_prodn.*ocn_pars.M(ocn_pars.Ib); % mol
+    POM_total_export = PARTICLES(ocn_pars.Ib,:).*ocn_pars.M(ocn_pars.Ib); % mol
     % calculate particle concentration in water column (mol kg-1 day-1)
-    PARTICLES(ocn_pars.Ib,:) = POM_total_export;
-    PARTICLES(ocn_pars.Ii,:) = -POM_remin(ocn_pars.Ii,:).*ocn_pars.M(ocn_pars.Ii);
+    PARTICLES(ocn_pars.Ib,:) = PARTICLES(ocn_pars.Ib,:) + POM_total_export;
+    PARTICLES(ocn_pars.Ii,:) = PARTICLES(ocn_pars.Ii,:)+ (-POM_remin(ocn_pars.Ii,:).*ocn_pars.M(ocn_pars.Ii));
 
     %for n=1:size(POM_remin,2)
     %    PARTICLES(:,n)=cell2mat(accumarray(parameters.ocn_pars.wc,PARTICLES(:,n),[],@(x){cumsum(x)})) .* ocn_pars.rM;
@@ -190,7 +191,9 @@ function [dCdt , PARTICLES] = remin_POM ( dCdt , POM_prodn , PARTICLES , paramet
 end
 
 %%
-function [dCdt , PARTICLES] = remin_CaCO3(dCdt , POM_prodn , ECC , PARTICLES , parameters)
+function [dCdt , PARTICLES] = remin_CaCO3(dCdt , ECC , PARTICLES , parameters)
+
+% n.b. CaCO3 currently save out as remin not flux
 
 if parameters.bgc_pars.CARBCHEM_select
 
@@ -209,7 +212,7 @@ if parameters.bgc_pars.CARBCHEM_select
     rainratio=bgc_pars.PIC_POC.*rainratio_exponent;
     
     % Calculate CaCO3 Production from POM production and rain ratio
-    CaCO3_prodn = POM_prodn(:,I.POC).*rainratio;
+    CaCO3_prodn = PARTICLES(Ib,I.POC).*rainratio;
     
     % DIC and ALK uptake from CaCO3 production
     dCdt(Ib,I.DIC) = dCdt(Ib,I.DIC) - CaCO3_prodn;

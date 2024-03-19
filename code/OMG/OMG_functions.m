@@ -82,21 +82,24 @@ function [ dCdt_out , diagnostics , bioinf] = dOMGdt ( t , y , OCEAN , ECC , par
         % Surface Biological PO4 uptake and OM production
         switch bgc_pars.uptake_scheme
             case 'eco'
+                % JDW: I broke this for you Ben! 
+                % needs to output POM_prodn into PARTICLES now
+                error('Ben needs to fix this...oops!')
                 [dCdt(Ib,:),POM_prodn,~,ggr] = functions.eco_fcns.ecosystem(SURFACE,parameters);
                 % third output variable is 'invfit' 
             otherwise
                 % default PO4-based uptake & export
-                [dCdt,POM_prodn  ] = functions.bgc_fcns.SurfaceProd(dCdt,SURFACE,parameters); 
+                [dCdt,PARTICLES] = functions.bgc_fcns.SurfaceProd(dCdt,SURFACE,PARTICLES,parameters); 
         end
 
         % remineralise DOM
         [dCdt] = functions.bgc_fcns.remin_DOM (TRACERS, dCdt , parameters );
 
         % Implicitly remineralise POM
-        [dCdt,PARTICLES] = functions.bgc_fcns.remin_POM ( dCdt , POM_prodn , PARTICLES , parameters );
+        [dCdt,PARTICLES] = functions.bgc_fcns.remin_POM ( dCdt , PARTICLES , parameters );
 
         % Implicitly remineralise CaCO3 
-        [dCdt,PARTICLES] = functions.bgc_fcns.remin_CaCO3(dCdt , POM_prodn , ECC , PARTICLES , parameters); 
+        [dCdt,PARTICLES] = functions.bgc_fcns.remin_CaCO3(dCdt , ECC , PARTICLES , parameters); 
 
         % Scavenging
         [ dCdt ] = functions.bgc_fcns.scavenging (dCdt , TRACERS , parameters , PARTICLES );
