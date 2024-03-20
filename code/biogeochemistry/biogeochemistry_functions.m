@@ -22,7 +22,7 @@ end
 
 %%----- SUBROUTINES -----%%
 %%
-function [dCdt,PARTICLES] = SurfaceProd(dCdt , SURFACE , PARTICLES , parameters)
+function [dCdt,PARTICLES,diagnostics] = SurfaceProd(dCdt , SURFACE , PARTICLES , parameters ,diags)
     % BAW changed i/o format to pass dCdt and Particle_Export (implicit particulate production)
     gen_pars=parameters.gen_pars;
     bgc_pars=parameters.bgc_pars;
@@ -66,6 +66,12 @@ function [dCdt,PARTICLES] = SurfaceProd(dCdt , SURFACE , PARTICLES , parameters)
     dCdt(Ib,1:gen_pars.n_bgc_tracers) = dCdt(Ib,1:gen_pars.n_bgc_tracers)  - uptake;
     dCdt(Ib,1:gen_pars.n_bgc_tracers) = dCdt(Ib,1:gen_pars.n_bgc_tracers)  + uptake.*bgc_pars.DOP_frac*bgc_pars.mapOCN_DOM;
     PARTICLES(Ib,:) = PARTICLES(Ib,:) + uptake.*bgc_pars.rDOP_frac*bgc_pars.mapOCN_POM; 
+
+    if diags
+        tmp=zeros(parameters.ocn_pars.nb,gen_pars.n_bgc_tracers);
+        tmp(Ib,:)=uptake;
+        diagnostics.fluxes.uptake=tmp;
+    end
     
     % Calculate uptake of all BGC tracers from PO4 uptake, using bgc_pars.stoichiometry
     %dCdt(:,1:gen_pars.n_bgc_tracers) = -uptake .* bgc_pars.uptake_stoichiometry(Ib,:);

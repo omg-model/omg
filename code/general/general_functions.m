@@ -1064,6 +1064,24 @@ function [ OUTPUT ] = collate_output( yr , TRACERS_t , diagnostics , parameters 
                 end
             end
 
+            % Diagnosed Fluxes
+            % for j=1:gen_pars.n_bgc_tracers
+            %     Data_name = I.OCN_names{j};
+            %     Data      = mean(TRACERS_t(:,j,i_int),3);
+            %     % Time Slices
+            %     if write_timeslices
+            %         F = getfield(OUTPUT.TimeSlice ,Data_name);                   % Extract TimeSlice Fields from OUTPUT structure
+            %         F(:,:,i) = Data;                                             % Place Data in extracted Fields
+            %         OUTPUT.TimeSlice  = setfield(OUTPUT.TimeSlice ,Data_name,F); % Place Fields back in OUTPUT structure
+            %     end
+            %     if write_timeseries
+            %         % Time Series
+            %         V = getfield(OUTPUT.TimeSeries,Data_name);                   % Extract TimeSeries Vector from OUTPUT structure
+            %         V(i) = loc_M'*Data;                                          % Integrate Data and place in extracted Vector
+            %         OUTPUT.TimeSeries = setfield(OUTPUT.TimeSeries,Data_name,V); % Place Vector back in OUTPUT structure
+            %     end
+            % end
+
             % EcoEvo OUTPUT
             if strcmp(bgc_pars.uptake_scheme,'eco')
                 iphy   = I.PHY;
@@ -1154,6 +1172,7 @@ function [ TRACERS, ATM , TRACERS_t , diagnostics , bioinf ] = ...
     diagnostics.PARTICLES = zeros(ocn_pars.nb,gen_pars.n_particles,nsteps);
     diagnostics.ATM       = zeros(gen_pars.n_atm,nsteps);
     diagnostics.ECC       = zeros(ocn_pars.nb,gen_pars.n_carbchem,nsteps);
+    diagnostics.fluxes.uptake = zeros(ocn_pars.nb,gen_pars.n_bgc_tracers,nsteps);
     if eco_pars.nrgb>0 || eco_pars.ngenes>0
         diagnostics.GENOME    = zeros(ocn_pars.ni,eco_pars.jpmax,eco_pars.ngenes,nsteps);
         diagnostics.RGB       = zeros(ocn_pars.ni,eco_pars.jpmax,eco_pars.nrgb,nsteps);
@@ -1218,6 +1237,7 @@ function [ TRACERS, ATM , TRACERS_t , diagnostics , bioinf ] = ...
         diagnostics.PARTICLES(:,:,i) = diagnostics_tmp.PARTICLES;
         diagnostics.ATM        (:,i) = diagnostics_tmp.ATM      ;
         diagnostics.ECC      (:,:,i) = diagnostics_tmp.ECC      ;
+        diagnostics.fluxes.uptake   (:,:,i) = diagnostics_tmp.fluxes.uptake   ;
         if eco_pars.nrgb>0 || eco_pars.ngenes>0
             diagnostics.RGB    (:,:,:,i) = bioinf.RGB   ;
             diagnostics.GENOME (:,:,:,i) = bioinf.GENOME;
@@ -1289,7 +1309,7 @@ function [ parameters ] = report_progress( parameters , varargin )
     
                     % QUICK PLOT OF SURFACE PO4 AND TOTAL PLANKTON BIOMASS
                     functions.gen_fcns.quick_plot( yr , TRACERS , parameters );
-                    
+
                 otherwise
 
                     %frac_complete = yr/(parameters.gen_pars.runtime+parameters.gen_pars.start_year);

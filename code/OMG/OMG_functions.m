@@ -21,7 +21,7 @@ function [ OMG_fcns ] = OMG_functions ( )
 
 end
 
-function [ dCdt_out , diagnostics , bioinf] = dOMGdt ( t , y , OCEAN , ECC , parameters , functions , forcings  , bioinf , diags_on)
+function [ dCdt_out , diagnostics , bioinf] = dOMGdt ( t , y , OCEAN , ECC , parameters , functions , forcings ,  bioinf , diags_on)
     % N.B. 'OUTPUT' will not be passed out if dOMGdt is called by ODE solver
     % Any additional outputs will need to be calculated offline.
 
@@ -89,7 +89,7 @@ function [ dCdt_out , diagnostics , bioinf] = dOMGdt ( t , y , OCEAN , ECC , par
                 % third output variable is 'invfit' 
             otherwise
                 % default PO4-based uptake & export
-                [dCdt,PARTICLES] = functions.bgc_fcns.SurfaceProd(dCdt,SURFACE,PARTICLES,parameters); 
+                [dCdt,PARTICLES,diagnostics] = functions.bgc_fcns.SurfaceProd(dCdt,SURFACE,PARTICLES,parameters,diags_on); 
         end
 
         % remineralise DOM
