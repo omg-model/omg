@@ -55,7 +55,7 @@ gen_pars.save_matlab_output=false;                                          % ad
 gen_pars.save_intra_annual_n        = 1;                                   % number of intra-annual saving intervals
 gen_pars.n_sub_tsteps               = 1;                                    % number of extra time steps per standard timestep
 
-gen_pars.save_carbchem              = false;                                % save carbonate chemistry output?
+gen_pars.save_carbchem              = true;                                % save carbonate chemistry output?
 % CURRENTLY NOT SET UP FOR INTRA-ANNUAL OUTPUT
                                                                             %   1 = yearly
                                                                             %   4 = seasonal
