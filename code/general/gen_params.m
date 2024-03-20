@@ -56,6 +56,7 @@ gen_pars.save_intra_annual_n        = 1;                                   % num
 gen_pars.n_sub_tsteps               = 1;                                    % number of extra time steps per standard timestep
 
 gen_pars.save_carbchem              = true;                                % save carbonate chemistry output?
+gen_pars.save_output_flag=false;
 % CURRENTLY NOT SET UP FOR INTRA-ANNUAL OUTPUT
                                                                             %   1 = yearly
                                                                             %   4 = seasonal

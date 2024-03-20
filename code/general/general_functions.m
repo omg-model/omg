@@ -1272,24 +1272,6 @@ function [ parameters ] = report_progress( parameters , varargin )
     
             switch parameters.bgc_pars.uptake_scheme
 
-                case {'MM','restore'}
-                    %frac_complete = yr/(parameters.gen_pars.runtime+parameters.gen_pars.start_year);
-                    frac_complete = (yr-parameters.gen_pars.start_year)/parameters.gen_pars.runtime;
-                    if frac_complete>=parameters.gen_pars.run_pc_completed
-
-                        % record time elapsed and reset
-                        elapsed = toc(parameters.gen_pars.timer );
-                        parameters.gen_pars.timer  = tic;
-
-                        % Display percentage completed
-                        disp(sprintf('%5.0f%13.2f%12.0f', [yr elapsed frac_complete*100]))
-                        
-                        % set next threshold for progress report (minimum +10%)
-                        next_output = parameters.gen_pars.run_pc_completed + max([0.1 1./(parameters.gen_pars.runtime+parameters.gen_pars.start_year)]);
-                        parameters.gen_pars.run_pc_completed = round(next_output*100)/100; % round to nearest percent (trailing errors from 'max')
-
-                    end
-
                 case 'eco'
 
                     % check for mass conservation in inventory
@@ -1307,6 +1289,25 @@ function [ parameters ] = report_progress( parameters , varargin )
     
                     % QUICK PLOT OF SURFACE PO4 AND TOTAL PLANKTON BIOMASS
                     functions.gen_fcns.quick_plot( yr , TRACERS , parameters );
+                    
+                otherwise
+
+                    %frac_complete = yr/(parameters.gen_pars.runtime+parameters.gen_pars.start_year);
+                    frac_complete = (yr-parameters.gen_pars.start_year)/parameters.gen_pars.runtime;
+                    if frac_complete>=parameters.gen_pars.run_pc_completed
+
+                        % record time elapsed and reset
+                        elapsed = toc(parameters.gen_pars.timer );
+                        parameters.gen_pars.timer  = tic;
+
+                        % Display percentage completed
+                        disp(sprintf('%5.0f%13.2f%12.0f', [yr elapsed frac_complete*100]))
+                        
+                        % set next threshold for progress report (minimum +10%)
+                        next_output = parameters.gen_pars.run_pc_completed + max([0.1 1./(parameters.gen_pars.runtime+parameters.gen_pars.start_year)]);
+                        parameters.gen_pars.run_pc_completed = round(next_output*100)/100; % round to nearest percent (trailing errors from 'max')
+
+                    end
             end
         else
 

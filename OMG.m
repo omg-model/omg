@@ -28,6 +28,13 @@ end
 %for yr=1:runtime
 for    yr=parameters.gen_pars.start_year:runtime+parameters.gen_pars.start_year-1
 
+    % Set logical flag for saving output this year
+    if ismember(yr,parameters.gen_pars.save_years)
+        parameters.gen_pars.save_output_flag=true;
+    else
+        parameters.gen_pars.save_output_flag=false;
+    end
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % SOLVE FOR 1 YEAR  
     [ TRACERS , ATM , TRACERS_t , diagnostics , bioinf ] ...

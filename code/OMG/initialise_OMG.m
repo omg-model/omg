@@ -40,7 +40,9 @@ end
 
 
 %% Check matlab has correct number of workers
-%p = gcp('nocreate');
+if license('test','Distrib_Computing_Toolbox')
+    p = gcp('nocreate');
+end
 
 %% run initialisation scripts
 run('../general/initialise_gen.m')

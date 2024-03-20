@@ -133,21 +133,23 @@ function [dCdt , PARTICLES] = remin_POM ( dCdt , PARTICLES , parameters )
     % Take POM production from the surface layer and redistribute across water column
     % n.b. Det included currently
     POM_remin=bgc_pars.POM_matrix*PARTICLES;
-    
     % get total POC export from surface
     POM_total_export = PARTICLES(ocn_pars.Ib,:).*ocn_pars.M(ocn_pars.Ib); % mol
-    % calculate particle concentration in water column (mol kg-1 day-1)
-    PARTICLES(ocn_pars.Ib,:) = PARTICLES(ocn_pars.Ib,:) + POM_total_export;
-    PARTICLES(ocn_pars.Ii,:) = PARTICLES(ocn_pars.Ii,:)+ (-POM_remin(ocn_pars.Ii,:).*ocn_pars.M(ocn_pars.Ii));
 
-    %for n=1:size(POM_remin,2)
-    %    PARTICLES(:,n)=cell2mat(accumarray(parameters.ocn_pars.wc,PARTICLES(:,n),[],@(x){cumsum(x)})) .* ocn_pars.rM;
-    %end
-    PARTICLES=ocn_pars.wc_cumsum*PARTICLES.*ocn_pars.rM;
-    % get flux hitting seafloor
-    % for n=1:size(POM_remin,2)
-    %     benthic_remin(:,n)=(POM_total_export(:,n)-accumarray(ocn_pars.wc,POM_remin(:,n).*ocn_pars.M)).*ocn_pars.rM(ocn_pars.Iben);
-    % end
+    if parameters.gen_pars.save_output_flag | parameters.bgc_pars.Fe_cycle  
+        % calculate particle concentration in water column (mol kg-1 day-1)
+        PARTICLES(ocn_pars.Ib,:) = PARTICLES(ocn_pars.Ib,:) + POM_total_export;
+        PARTICLES(ocn_pars.Ii,:) = PARTICLES(ocn_pars.Ii,:)+ (-POM_remin(ocn_pars.Ii,:).*ocn_pars.M(ocn_pars.Ii));
+    
+        %for n=1:size(POM_remin,2)
+        %    PARTICLES(:,n)=cell2mat(accumarray(parameters.ocn_pars.wc,PARTICLES(:,n),[],@(x){cumsum(x)})) .* ocn_pars.rM;
+        %end
+        PARTICLES=ocn_pars.wc_cumsum*PARTICLES.*ocn_pars.rM;
+        % get flux hitting seafloor
+        % for n=1:size(POM_remin,2)
+        %     benthic_remin(:,n)=(POM_total_export(:,n)-accumarray(ocn_pars.wc,POM_remin(:,n).*ocn_pars.M)).*ocn_pars.rM(ocn_pars.Iben);
+        % end
+    end
     benthic_remin=ocn_pars.wc_sum*(POM_remin.*ocn_pars.M);
     benthic_remin=(POM_total_export-benthic_remin(1:numel(ocn_pars.Ib),:)).*ocn_pars.rM(ocn_pars.Iben);
     
